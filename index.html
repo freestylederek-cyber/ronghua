@@ -1,0 +1,1568 @@
+<!doctype html>
+<html lang="zh-Hant">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>溶化</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Noto+Sans+TC:wght@300;400;500&family=Noto+Serif+TC:wght@400;600;700&display=swap">
+<style>
+/* 金箔夜空：黑底、金色明體標題、白色內文；背景七曜金線星盤慢轉。
+   版面：電腦＝三欄（左功法說明與站序、中人體運行、右這次練功）；手機＝上設定、中人體圖、下資訊卡，底部固定練功按鈕。只有暗色一種。 */
+:root {
+  color-scheme: dark;
+  --bg: #0b0a08; --panel: rgba(15,13,10,.78);
+  --gold: #d4b06a; --gold-2: #f0d9a0; --gold-line: rgba(212,176,106,.28); --gold-faint: rgba(212,176,106,.12);
+  --ink: #f2eee6; --ink-2: #aaa395; --ink-3: rgba(242,238,230,.26);
+  --breath: #b3aa9a; /* 底稿色碼調亮，黑底才看得清 */
+  --f-disp: "Noto Serif TC", "Songti TC", "PMingLiU", serif;
+  --f-body: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif;
+  --f-num: "Cormorant Garamond", "Noto Serif TC", serif;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html { background: var(--bg); }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 400 15px/1.75 var(--f-body);
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+#sky { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; }
+#ghost { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; mix-blend-mode: screen; } /* 滑鼠煙霧：星盤之上、三欄之下 */
+button { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--gold-2); outline-offset: 3px; }
+.preload { position: absolute; width: 1px; height: 1px; overflow: hidden; opacity: 0; font-family: var(--f-disp); pointer-events: none; }
+
+/* ---------- 三欄 ---------- */
+.app { position: relative; z-index: 1; display: grid; grid-template-columns: minmax(250px, 296px) minmax(0, 1fr) minmax(310px, 360px);
+  gap: 22px; height: 100svh; padding-block: 16px; }
+.col { min-height: 0; display: flex; flex-direction: column; gap: 22px; }
+.col-side { overflow-y: auto; padding: 22px 20px; border: 1px solid var(--gold-faint); border-radius: 14px; background: var(--panel);
+  backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); scrollbar-width: thin; scrollbar-color: var(--gold-faint) transparent; }
+.col-center { gap: 10px; }
+.sec-title { margin: 0 0 10px; font: 600 15px var(--f-disp); letter-spacing: .24em; color: var(--gold); }
+
+h1 { margin: 4px 0 0; font: 600 34px/1.15 var(--f-disp); letter-spacing: .12em; color: #e2c27f; }
+
+/* 左：修道人名字 */
+.p-name { display: flex; align-items: baseline; gap: 14px; padding: 6px 0 4px; border-bottom: 1px solid var(--gold-line); transition: border-color .25s; }
+.p-name:focus-within { border-bottom-color: var(--gold); }
+.p-name label { flex: none; font: 600 15px var(--f-disp); letter-spacing: .3em; color: var(--gold); }
+.p-name input { flex: 1; min-width: 0; padding: 2px 0; border: 0; background: transparent; color: var(--gold-2);
+  font: 600 22px/1.4 var(--f-disp); letter-spacing: .12em; }
+.p-name input:focus { outline: none; }
+.p-name input::placeholder { color: var(--ink-3); font: 400 16px var(--f-body); letter-spacing: .08em; }
+
+/* 左：功法說明 */
+.modes .mode-card { display: grid; grid-template-columns: auto 1fr; column-gap: 12px; align-items: center;
+  padding: 12px 14px; border-radius: 12px; border: 1px solid var(--gold); background: rgba(212,176,106,.08); }
+.modes .mode-card i { width: 10px; height: 10px; border-radius: 50%; background: var(--gold-2); box-shadow: 0 0 10px var(--gold-2); grid-row: span 2; }
+.modes .m-name { font: 600 19px/1.3 var(--f-disp); letter-spacing: .1em; color: var(--gold-2); }
+.modes .m-sub { grid-column: 2; font-size: 12.5px; color: var(--ink-2); letter-spacing: .06em; }
+.modes .m-desc { grid-column: 1 / -1; margin: 8px 0 0; font-size: 13.5px; line-height: 1.7; color: var(--ink-2); }
+.seq { display: grid; gap: 10px; }
+.seq .row { display: flex; flex-wrap: wrap; align-items: center; gap: 5px 3px; font-size: 13px; }
+.seq .row > b { flex: none; width: 100%; font: 500 12.5px var(--f-body); letter-spacing: .16em; color: var(--c, var(--ink-2)); }
+.seq button { padding: 3px 8px; min-height: 28px; border-radius: 999px; border: 1px solid transparent; background: transparent; color: var(--ink-2); cursor: pointer; font-size: 12.5px; }
+.seq button:hover { border-color: var(--gold-line); color: var(--ink); }
+.seq button.lit { color: var(--ink); border-color: var(--gold-line); }
+.seq button.cur { color: #120f0a; background: var(--c, var(--gold)); border-color: transparent; }
+.seq em { font-style: normal; color: var(--ink-3); }
+.about { display: grid; gap: 8px; padding-top: 16px; border-top: 1px solid var(--gold-faint); font-size: 13px; line-height: 1.7; color: var(--ink-2); }
+.about p { margin: 0; }
+.about ul { margin: 0; padding-left: 1.1em; display: grid; gap: 4px; }
+
+/* 中：步驟條＋人體圖 */
+.steps-wrap { display: grid; gap: 4px; justify-items: center; padding-top: 6px; }
+.steps { display: flex; align-items: center; gap: 6px; margin: 0; padding: 0; list-style: none; font-size: 13px; letter-spacing: .12em; color: var(--ink-3); }
+.steps li { display: flex; align-items: center; gap: 6px; }
+.steps li + li::before { content: ""; width: 22px; height: 1px; background: var(--gold-faint); }
+.steps li span { padding: 3px 10px; border-radius: 999px; border: 1px solid transparent; transition: color .3s, border-color .3s, background .3s; }
+.steps li.done span { color: var(--ink-2); }
+.steps li.on span { color: #120f0a; background: var(--gold-2); box-shadow: 0 0 16px rgba(240,217,160,.35); }
+.steps li.off { opacity: .35; }
+.phase { margin: 0; min-height: 1.75em; color: var(--gold-2); letter-spacing: .06em; text-align: center; text-wrap: balance; }
+.stage { flex: 1; min-height: 0; display: flex; justify-content: center; }
+.fig { height: 100%; width: auto; aspect-ratio: 680 / 1730; max-width: 100%; display: block; overflow: visible; }
+
+/* 右：這次練功 */
+.set { display: grid; gap: 8px; }
+.set > b { font: 500 12.5px var(--f-body); letter-spacing: .2em; color: var(--ink-2); }
+.seg { display: flex; flex-wrap: wrap; gap: 6px; }
+.seg button { min-height: 36px; padding: 0 12px; border-radius: 999px; border: 1px solid var(--gold-faint); background: transparent; cursor: pointer; color: var(--ink-2); font-size: 13.5px; letter-spacing: .06em; }
+.seg button:hover { color: var(--ink); border-color: var(--gold-line); }
+.seg button[aria-pressed="true"] { color: var(--gold-2); border-color: var(--gold); background: rgba(212,176,106,.1); }
+.actions { display: grid; gap: 12px; }
+.btns { display: flex; gap: 10px; }
+#play { flex: 1; min-height: 50px; border-radius: 999px; cursor: pointer; letter-spacing: .24em; font-weight: 500; font-size: 16px;
+  color: #120f0a; background: linear-gradient(180deg, #ecd29a, #c9a35a); border: 0; box-shadow: 0 6px 24px rgba(212,176,106,.22); }
+#play[data-s="playing"] { color: var(--gold-2); background: rgba(212,176,106,.08); border: 1px solid var(--gold); box-shadow: none; }
+#play:active, #finish:active { transform: translateY(1px); }
+#finish { flex: none; min-height: 50px; padding: 0 18px; border-radius: 999px; cursor: pointer; letter-spacing: .16em; color: var(--ink); background: transparent; border: 1px solid var(--gold-line); }
+#finish[aria-pressed="true"] { color: var(--gold-2); border-color: var(--gold); }
+.clock { display: flex; justify-content: space-between; align-items: baseline; font-size: 13px; color: var(--ink-2); letter-spacing: .08em; }
+.clock b { font: 600 22px var(--f-num); color: var(--ink); letter-spacing: .04em; font-variant-numeric: tabular-nums; }
+.gauge { display: grid; gap: 6px; font-size: 12.5px; letter-spacing: .14em; color: var(--ink-2); }
+.gauge .bar { position: relative; height: 3px; border-radius: 3px; background: var(--gold-faint); overflow: hidden; }
+.gauge .bar i { position: absolute; inset: 0; transform-origin: left; transform: scaleX(var(--v, 0)); background: linear-gradient(90deg, var(--gold), var(--gold-2)); box-shadow: 0 0 10px var(--gold); }
+
+.card { display: grid; gap: 12px; padding-top: 18px; border-top: 1px solid var(--gold-line); }
+.card.swap { animation: swap .45s cubic-bezier(.16,1,.3,1); }
+@keyframes swap { from { opacity: .2; transform: translateY(6px); } }
+.card .who { display: flex; align-items: center; gap: 14px; }
+.card .badge { flex: none; width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; font: 600 21px var(--f-num);
+  color: #120f0a; background: var(--bc, var(--gold)); box-shadow: 0 0 20px color-mix(in srgb, var(--bc, var(--gold)) 50%, transparent); }
+.card .badge[data-c="none"] { --bc: transparent; color: var(--gold); box-shadow: none; border: 1px solid var(--gold-line); }
+.card .name { margin: 0; font: 600 29px/1.2 var(--f-disp); letter-spacing: .08em; color: var(--gold-2); }
+.card .name small { margin-left: 10px; font: 400 14px var(--f-body); letter-spacing: .06em; color: var(--ink-2); }
+.card dl { margin: 0; display: grid; gap: 10px; }
+.card dt { font-size: 12px; letter-spacing: .26em; color: var(--gold); opacity: .85; }
+.card dd { margin: 2px 0 0; }
+
+/* ---------- 人體圖 ---------- */
+.fig .body { fill: rgba(19,17,14,.9); stroke: rgba(212,176,106,.45); stroke-width: 2.2; }
+.fig .brain, .fig .cerebellum, .fig .kidney { fill: rgba(212,176,106,.05); stroke: rgba(212,176,106,.22); stroke-width: 1.6; }
+.fig .heart { fill: rgba(242,112,47,.08); stroke: rgba(242,112,47,.3); stroke-width: 1.6; }
+.fig .brainstem { stroke: rgba(212,176,106,.05); }
+.fig .palate { stroke: rgba(212,176,106,.22); stroke-width: 1.6; }
+.fig .spine { stroke: rgba(212,176,106,.07); }
+.fig .vertebra { stroke: rgba(212,176,106,.2); stroke-width: 1.4; }
+.fig .organ-label { fill: var(--ink-3); font: 400 20px var(--f-body); }
+
+.fig .ghost, .fig .live { fill: none; stroke-linecap: round; stroke-linejoin: round; }
+.fig .ghost { stroke-width: 4; opacity: .06; transition: opacity .4s; }
+.fig .ghost.r-breath { stroke-dasharray: 14 11; stroke-width: 3; opacity: .5; }
+.fig .live.r-breath { display: none; }
+.fig .ghost.r-melt-g { stroke: var(--gold-2); opacity: .3; }
+.fig .live { stroke-width: 6; }
+.fig .live.r-melt { stroke: var(--gold-2); stroke-width: 7; }
+.r-breath { stroke: var(--breath); }
+.fig .breath-live { fill: none; stroke: var(--breath); stroke-width: 4; stroke-linecap: round; opacity: .9; }
+.fig .head { --hc: var(--gold-2); transition: opacity .2s; }
+.fig .head[data-route="breath"] { --hc: var(--breath); }
+.fig .head-halo { fill: var(--hc); opacity: .5; }
+.fig .head-core { fill: #fff6e0; }
+
+.fig .pt { cursor: pointer; }
+.fig .pt .leader { stroke: rgba(242,238,230,.25); stroke-width: 1.5; }
+.fig .pt .halo { fill: transparent; }
+.fig .pt .dot { fill: #17140f; stroke: rgba(212,176,106,.5); stroke-width: 2.4; transition: fill .3s; }
+.fig .pt.shared .dot, .fig .pt.extra .dot { stroke: var(--gold); }
+.fig .pt .num { fill: var(--gold); font: 600 22px var(--f-num); pointer-events: none; }
+.fig .pt .lbl { fill: var(--ink); font: 600 30px var(--f-disp); letter-spacing: .04em; paint-order: stroke; stroke: var(--bg); stroke-width: 8px; stroke-linejoin: round; transition: fill .3s; }
+.fig .pt .alias { fill: var(--ink-2); font-size: 19px; font-weight: 400; }
+.fig .pt.extra .lbl { font-size: 26px; fill: var(--gold-2); }
+.fig .pt.off { opacity: .4; }
+.fig .pt.extra.off { opacity: .28; }
+.fig .pt:hover .lbl, .fig .pt:focus-visible .lbl { fill: var(--gold-2); }
+.fig .pt:focus { outline: none; }
+.fig .pt.lit { --c: var(--gold); }
+.fig .pt.lit[data-route="breath"] { --c: var(--breath); }
+.fig .pt.lit[data-route="gather"] { --c: var(--gold-2); }
+.fig .pt.lit.shared { --c: var(--gold); }
+.fig[data-start="teacher"] .ghost.r-breath { opacity: 0; }
+.fig .gather .mote { fill: var(--gold-2); }
+.fig .gather .ring { fill: none; stroke: var(--gold-2); stroke-width: 2; }
+.fig .pt.squeeze .dot { transform: scale(.78); transition: transform .9s ease; }
+.fig .pt.lit .halo { fill: var(--c); opacity: .5; }
+.fig .pt.lit .dot { fill: var(--c); stroke: var(--gold-2); }
+.fig .pt.lit .num { fill: #120f0a; }
+.fig .pt.lit .lbl { fill: var(--gold-2); }
+.fig .pt .halo, .fig .pt .dot, .fig .pt .num { transform-box: fill-box; transform-origin: center; }
+.fig .pt.ping .halo { animation: ping .6s ease-out; }
+@keyframes ping { 0% { transform: scale(1); opacity: .9; } 100% { transform: scale(2.2); opacity: .5; } }
+.fig .pt.current .halo { animation: breathe 1.8s ease-in-out infinite; }
+@keyframes breathe { 50% { transform: scale(1.45); opacity: .28; } }
+
+/* ---------- 星盤：中間亮、兩側面板後面淡 ---------- */
+@media (min-width: 1100px) {
+  #sky { -webkit-mask-image: radial-gradient(ellipse 34% 62% at 50% 52%, #000 55%, rgba(0,0,0,.3) 100%); mask-image: radial-gradient(ellipse 34% 62% at 50% 52%, #000 55%, rgba(0,0,0,.3) 100%); }
+}
+
+/* ---------- 手機與平板：一欄，練功按鈕固定在底部 ---------- */
+@media (max-width: 1099px) {
+  body { padding-bottom: calc(96px + env(safe-area-inset-bottom, 0px)); }
+  .app { display: flex; flex-direction: column; height: auto; gap: 14px; padding-block: 12px 24px; }
+  .col, .col-side { display: contents; }
+  .p-title { order: 1; display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+  h1 { margin: 0; font-size: 26px; letter-spacing: .1em; order: -1; }
+  .p-modes, .p-name { order: 2; } .p-settings { order: 3; } .steps-wrap { order: 5; } .stage { order: 6; }
+  .p-card { order: 7; } .p-seq { order: 8; } .about { order: 9; }
+  .p-modes, .p-settings > .sec-title { display: none; }
+  .p-settings { display: grid; gap: 10px; }
+  .set { grid-template-columns: 3.2em 1fr; align-items: center; }
+  .seg { gap: 5px; flex-wrap: nowrap; }
+  .seg button { padding: 0 9px; font-size: 13px; letter-spacing: 0; white-space: nowrap; }
+  .actions { position: fixed; left: 0; right: 0; bottom: 0; z-index: 5; gap: 8px; background: rgba(11,10,8,.92); border-top: 1px solid var(--gold-faint);
+    backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+    padding: 10px max(16px, env(safe-area-inset-right, 0px)) calc(10px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); }
+  .actions .gauge { display: none; }
+  #play, #finish { min-height: 46px; }
+  .clock { font-size: 12px; } .clock b { font-size: 18px; }
+  .steps { font-size: 11.5px; gap: 2px; letter-spacing: 0; flex-wrap: wrap; justify-content: center; } /* 溶化五個步驟比較長：縮小間隔，字塊不拆開 */
+  .steps li { gap: 3px; }
+  .steps li + li::before { width: 6px; }
+  .steps li span { padding: 2px 4px; white-space: nowrap; }
+  .stage { height: max(460px, calc(100svh - 214px - env(safe-area-inset-bottom, 0px))); flex: none; }
+  .fig .pt .lbl { font-size: 38px; stroke-width: 10px; }
+  .fig .pt.extra .lbl { font-size: 32px; }
+  .fig .pt .alias { font-size: 24px; }
+  .fig .pt .dot, .fig .pt .halo, .fig .pt .num { scale: 1.22; }
+  .card .name { font-size: 27px; }
+}
+@media (max-width: 360px) { .seg button { padding: 0 6px; } }
+@media (prefers-reduced-motion: reduce) {
+  .fig .pt.current .halo, .fig .pt.ping .halo, .card.swap { animation: none; }
+}
+</style>
+
+<script type="application/json" id="sanlu-data">{"canvas": {"width": 1160, "height": 1788}, "tip_of_lingtai": [462, 222], "colors": {"風": "#1f9488", "水": "#2d6fd2", "火": "#d9480f", "吸氣": "#8a8178", "回程": "#7a52b8", "共用": "#5a4a2c"}, "points": [{"id": 1, "name": "陰蹻", "alias": "會陰穴", "where": "肛門前三分之內、上方一寸三分（會陰）", "role": "三路起點；人體電路的陰極", "x": 562, "y": 1677}, {"id": 2, "name": "尾閭", "alias": "", "where": "脊椎最尾端（骶骨下面那五節），竅心在第三節", "role": "風路第 1 站", "x": 410, "y": 1618}, {"id": 3, "name": "仙骨", "alias": "", "where": "骶骨", "role": "風路第 2 站", "x": 425, "y": 1482}, {"id": 4, "name": "真炁穴", "alias": "", "where": "腰椎第五節（仙骨上端往上一寸三分）", "role": "第二法「真炁對轉」用到", "x": 468, "y": 1400}, {"id": 5, "name": "夾脊", "alias": "夾脊關", "where": "胸椎第十一節（陰維穴正後方）", "role": "風路第 3 站", "x": 420, "y": 1138}, {"id": 6, "name": "更年", "alias": "", "where": "胸椎第五節", "role": "風路第 4 站", "x": 387, "y": 877}, {"id": 7, "name": "項骨", "alias": "", "where": "頸椎和胸椎交界一帶", "role": "", "x": 418, "y": 678}, {"id": 8, "name": "玉枕", "alias": "", "where": "後腦凸起的地方（環椎之上）", "role": "風路第 5 站", "x": 272, "y": 360}, {"id": 9, "name": "腎竅", "alias": "", "where": "兩腎中間的動靜脈交點", "role": "水路第 1 站", "x": 492, "y": 1190}, {"id": 10, "name": "陰維穴", "alias": "", "where": "腎竅往上三寸三分，兩個腎上腺中間的交合點", "role": "水路第 2 站；陰電變壓器", "x": 480, "y": 1145}, {"id": 11, "name": "氣嗓後", "alias": "", "where": "喉嚨聲帶後面", "role": "水路第 3 站", "x": 495, "y": 525}, {"id": 12, "name": "心竅", "alias": "元神竅", "where": "心臟正中心", "role": "火路第 1 站；吸氣下行也經過", "x": 566, "y": 868}, {"id": 13, "name": "陽維穴", "alias": "", "where": "心臟上方一寸三分，大動脈大靜脈交點", "role": "火路第 2 站；陽電變壓器", "x": 558, "y": 752}, {"id": 14, "name": "降宮", "alias": "", "where": "氣管中段", "role": "火路第 3 站", "x": 532, "y": 665}, {"id": 15, "name": "重樓", "alias": "", "where": "氣管上段，靠近喉嚨", "role": "火路第 4 站", "x": 522, "y": 585}, {"id": 16, "name": "天上二孔", "alias": "上顎二孔", "where": "上顎", "role": "水路、火路共用", "x": 545, "y": 432}, {"id": 17, "name": "玄關", "alias": "", "where": "大小腦中間的四丘體", "role": "三路會合點，在這裡合成一線", "x": 415, "y": 312}, {"id": 18, "name": "靈台", "alias": "終點：靈台之尖", "where": "第三腦室裡的小腺體，上尖下圓", "role": "三路終點；人體電路的陽極", "x": 460, "y": 244}, {"id": 19, "name": "胎元", "alias": "", "where": "肚臍後一寸三分，後面正對腰椎", "role": "吸氣下行經過；通了以後停在這裡", "x": 658, "y": 1328}, {"id": 20, "name": "鼻孔", "alias": "", "where": "吸氣入口", "role": "吸氣入口", "x": 664, "y": 374}], "stations": {"風": [1, 2, 3, 5, 6, 8, 17, 18], "水": [1, 9, 10, 11, 16, 17, 18], "火": [1, 12, 13, 14, 15, 16, 17, 18], "吸氣": [20, 12, 19, 1]}, "paths": {"風": [1, [482, 1666], 2, 3, 4, [446, 1270], 5, [394, 1000], 6, [398, 780], 7, [410, 580], [402, 500], [366, 448], [310, 420], 8, 17, "tip"], "水": [1, [538, 1560], [512, 1380], 9, 10, [478, 950], [481, 760], [488, 630], 11, [514, 470], 16, 17, "tip"], "火": [1, [586, 1500], [586, 1160], [578, 990], 12, 13, 14, 15, [532, 500], 16, 17, "tip"], "吸氣": [20, [616, 392], [560, 412], [512, 470], [500, 560], [512, 690], [540, 790], 12, [612, 1050], [650, 1220], 19, [642, 1480], [602, 1620], 1], "回程": [18, [560, 560], [640, 980], 19, [640, 1480], [602, 1620], 1, [482, 1666], 2, 3, 4, [446, 1270], 5, [394, 1000], 6, [398, 780], 7, [410, 580], [402, 500], [366, 448], [310, 420], 8, 17, 18]}}</script>
+<script type="application/json" id="rong-data">{"points": [{"key": "泥丸", "name": "泥丸", "where": "頭頂", "role": "溶化經過：玉枕之後上到頭頂", "x": 468, "y": 116, "label": ["start", 494, 112, 488, 114]}, {"key": "眉心", "name": "透明綜閤", "alias": "眉心", "where": "兩眉中間", "role": "溶化經過：頭頂泥丸之後往前到這裡，再從人中往下", "x": 640, "y": 334, "label": ["start", 668, 322, 662, 326]}, {"key": "人中", "name": "人中", "where": "鼻子下方、上唇中間", "role": "溶化經過", "x": 650, "y": 407, "label": ["start", 700, 422, 692, 420]}, {"key": "舌根", "name": "舌根", "where": "喉結那裡", "role": "溶化經過", "x": 538, "y": 502, "label": ["start", 590, 505, 582, 505]}, {"key": "祖海", "name": "祖海", "where": "胎元正上方", "role": "溶化經過：心竅往下到這裡，再回到胎元", "x": 654, "y": 1262, "label": ["start", 708, 1258, 700, 1259]}, {"key": "胎元後三寸", "name": "胎元後三寸", "where": "胎元正後方、會陰正上方（跟會陰成 90 度的點）", "role": "起手吸滿的地方：會陰、胎元一起吸到這裡，再往上；水路、火路回程倒回這裡；風路回程停在這裡；溶化經過胎元後到這裡，再接腎竅往上到大腦", "x": 562, "y": 1328, "label": ["start", 578, 1446, 570, 1430]}], "card": {"one": "練完、吸完要收進身體；沒溶化只吸收十分之一。", "when": "每次練完、吸完就做", "steps": ["坐好，肚臍後輕輕收、會陰微微往上提", "意念帶著電從脊椎尾端沿背後往上，到後腦凸起處", "轉到前面往下：氣管中段→心臟中心→肚臍下", "回到會陰；呼吸順順的就好，不用管", "停下來靜守，電就存在肚臍一帶"]}, "front": ["泥丸", "眉心", "人中", "舌根", 15, 14, 13, 12, "祖海", 19], "meltPath": "陰蹻沿背後上到玉枕 → 泥丸（頭頂）→ 透明綜閤（眉心）→ 人中 → 舌根 → 重樓 → 降宮 → 陽維穴 → 心竅 → 祖海 → 胎元 → 胎元後三寸 → 腎竅 → 往上到大腦（沿水路到靈台）"}</script>
+<template id="sanlu-base"><path class="body" d="M455.0 82.0 L447.6 82.6 L439.6 83.2 L431.1 84.1 L422.3 85.1 L413.3 86.2 L404.3 87.7 L395.3 89.3 L386.5 91.2 L378.0 93.5 L370.0 96.0 L362.2 98.8 L354.5 102.0 L346.9 105.3 L339.4 109.0 L332.1 112.9 L325.0 117.0 L318.2 121.4 L311.7 126.0 L305.6 130.9 L300.0 136.0 L294.8 141.4 L289.9 147.1 L285.4 153.2 L281.2 159.5 L277.2 166.0 L273.6 172.7 L270.3 179.5 L267.3 186.3 L264.5 193.2 L262.0 200.0 L259.8 206.9 L258.0 213.9 L256.4 221.1 L255.2 228.3 L254.2 235.6 L253.5 243.0 L252.9 250.3 L252.5 257.6 L252.2 264.8 L252.0 272.0 L251.9 279.1 L252.0 286.3 L252.3 293.5 L252.8 300.7 L253.4 307.9 L254.1 315.0 L255.0 321.9 L255.9 328.8 L256.9 335.5 L258.0 342.0 L259.2 348.3 L260.4 354.6 L261.8 360.7 L263.2 366.6 L264.8 372.5 L266.4 378.2 L268.1 383.9 L270.0 389.4 L271.9 394.7 L274.0 400.0 L276.2 405.1 L278.6 410.1 L281.1 415.0 L283.7 419.7 L286.4 424.4 L289.1 428.9 L291.9 433.3 L294.6 437.6 L297.4 441.9 L300.0 446.0 L302.7 449.9 L305.5 453.4 L308.4 456.7 L311.4 459.8 L314.2 462.9 L317.0 466.1 L319.7 469.5 L322.1 473.2 L324.2 477.4 L326.0 482.0 L327.5 487.2 L328.7 492.8 L329.6 498.7 L330.4 504.9 L331.0 511.4 L331.4 518.0 L331.7 524.7 L331.9 531.5 L332.0 538.3 L332.0 545.0 L331.9 551.6 L331.7 558.2 L331.4 564.9 L330.9 571.5 L330.3 578.3 L329.6 585.2 L328.8 592.3 L328.0 599.6 L327.0 607.2 L326.0 615.0 L324.8 623.1 L323.5 631.6 L322.0 640.2 L320.4 649.1 L318.7 658.1 L317.0 667.3 L315.3 676.6 L313.8 686.0 L312.3 695.5 L311.0 705.0 L309.8 714.6 L308.6 724.4 L307.5 734.3 L306.4 744.3 L305.4 754.4 L304.5 764.5 L303.7 774.7 L303.0 784.8 L302.4 795.0 L302.0 805.0 L301.7 815.0 L301.5 825.0 L301.4 835.0 L301.3 845.0 L301.4 855.0 L301.7 865.0 L302.0 875.0 L302.5 885.0 L303.2 895.0 L304.0 905.0 L305.0 915.1 L306.1 925.2 L307.5 935.4 L308.9 945.6 L310.5 955.8 L312.2 965.9 L314.0 976.0 L315.9 985.8 L317.9 995.5 L320.0 1005.0 L322.2 1014.3 L324.7 1023.3 L327.4 1032.3 L330.2 1041.1 L333.0 1049.8 L335.8 1058.3 L338.6 1066.8 L341.3 1075.3 L343.8 1083.6 L346.0 1092.0 L348.1 1100.3 L350.1 1108.4 L352.0 1116.5 L353.9 1124.5 L355.6 1132.4 L357.2 1140.3 L358.7 1148.2 L360.0 1156.1 L361.1 1164.0 L362.0 1172.0 L362.7 1180.0 L363.3 1188.0 L363.7 1195.9 L364.0 1203.9 L364.1 1211.9 L364.1 1219.9 L363.8 1227.9 L363.4 1235.9 L362.8 1243.9 L362.0 1252.0 L361.0 1260.1 L359.7 1268.1 L358.2 1276.2 L356.5 1284.3 L354.6 1292.4 L352.6 1300.5 L350.6 1308.7 L348.4 1317.1 L346.2 1325.5 L344.0 1334.0 L341.7 1342.7 L339.2 1351.5 L336.5 1360.5 L333.7 1369.5 L330.9 1378.6 L328.1 1387.8 L325.3 1396.9 L322.7 1406.0 L320.2 1415.0 L318.0 1424.0 L315.9 1432.9 L313.8 1441.7 L311.8 1450.5 L309.9 1459.2 L308.1 1468.0 L306.5 1476.8 L305.0 1485.5 L303.8 1494.3 L302.7 1503.1 L302.0 1512.0 L301.5 1521.0 L301.2 1530.1 L301.0 1539.4 L301.1 1548.6 L301.4 1557.9 L301.9 1567.1 L302.6 1576.1 L303.5 1585.0 L304.6 1593.6 L306.0 1602.0 L307.6 1610.2 L309.2 1618.2 L311.1 1626.1 L313.2 1633.9 L315.5 1641.5 L318.1 1648.9 L321.0 1656.1 L324.3 1663.0 L327.9 1669.6 L332.0 1676.0 L336.5 1682.1 L341.3 1688.0 L346.6 1693.7 L352.1 1699.2 L358.0 1704.4 L364.2 1709.3 L370.7 1714.0 L377.5 1718.3 L384.6 1722.3 L392.0 1726.0 L399.7 1729.3 L407.9 1732.3 L416.5 1735.0 L425.4 1737.3 L434.5 1739.4 L443.8 1741.2 L453.3 1742.7 L462.9 1744.0 L472.5 1745.1 L482.0 1746.0 L491.7 1746.7 L501.7 1747.0 L511.9 1747.1 L522.2 1747.0 L532.6 1746.6 L543.0 1746.0 L553.2 1745.3 L563.1 1744.3 L572.8 1743.2 L582.0 1742.0 L590.9 1740.7 L599.8 1739.2 L608.4 1737.6 L616.9 1735.8 L625.1 1733.9 L633.1 1731.7 L640.8 1729.2 L648.2 1726.5 L655.3 1723.4 L662.0 1720.0 L668.3 1716.3 L674.3 1712.3 L680.0 1708.0 L685.4 1703.5 L690.5 1698.6 L695.3 1693.5 L699.9 1688.1 L704.1 1682.4 L708.2 1676.3 L712.0 1670.0 L715.5 1663.3 L718.8 1656.1 L721.7 1648.5 L724.4 1640.6 L726.8 1632.5 L729.0 1624.2 L731.0 1615.7 L732.8 1607.1 L734.5 1598.5 L736.0 1590.0 L737.4 1581.4 L738.5 1572.6 L739.5 1563.7 L740.3 1554.7 L740.9 1545.6 L741.4 1536.5 L741.6 1527.3 L741.6 1518.2 L741.4 1509.0 L741.0 1500.0 L740.3 1490.9 L739.4 1481.6 L738.2 1472.3 L736.8 1462.9 L735.2 1453.6 L733.5 1444.4 L731.7 1435.4 L729.8 1426.6 L727.9 1418.1 L726.0 1410.0 L724.0 1402.4 L721.7 1395.3 L719.2 1388.7 L716.6 1382.3 L714.0 1376.0 L711.4 1369.7 L709.0 1363.3 L706.7 1356.7 L704.7 1349.6 L703.0 1342.0 L701.6 1333.9 L700.4 1325.6 L699.4 1317.0 L698.5 1308.2 L697.8 1299.1 L697.2 1289.9 L696.8 1280.6 L696.4 1271.1 L696.2 1261.6 L696.0 1252.0 L696.0 1242.5 L696.1 1233.1 L696.4 1223.8 L696.9 1214.4 L697.4 1204.8 L697.9 1194.8 L698.5 1184.5 L699.1 1173.7 L699.6 1162.2 L700.0 1150.0 L700.4 1136.8 L700.8 1122.6 L701.2 1107.6 L701.6 1092.0 L701.9 1076.1 L702.3 1060.1 L702.6 1044.3 L702.8 1028.8 L702.9 1014.0 L703.0 1000.0 L703.0 986.7 L702.9 973.7 L702.8 961.1 L702.6 948.8 L702.3 936.8 L702.0 925.0 L701.6 913.4 L701.1 902.1 L700.6 891.0 L700.0 880.0 L699.4 869.2 L698.8 858.7 L698.1 848.4 L697.5 838.4 L696.7 828.5 L695.8 818.8 L694.7 809.4 L693.4 800.1 L691.8 791.0 L690.0 782.0 L687.9 773.2 L685.6 764.5 L683.0 756.0 L680.3 747.6 L677.4 739.5 L674.3 731.6 L671.0 723.8 L667.5 716.3 L663.8 709.0 L660.0 702.0 L655.9 695.2 L651.5 688.7 L646.7 682.4 L641.8 676.3 L636.8 670.4 L631.6 664.7 L626.5 659.2 L621.5 654.0 L616.6 648.9 L612.0 644.0 L607.4 639.4 L602.7 635.2 L598.0 631.4 L593.3 627.7 L588.8 624.2 L584.4 620.8 L580.2 617.4 L576.4 613.8 L573.0 610.0 L570.0 606.0 L567.5 601.8 L565.5 597.5 L563.9 593.2 L562.6 588.8 L561.5 584.4 L560.6 579.8 L559.9 575.1 L559.3 570.2 L558.7 565.2 L558.0 560.0 L557.3 554.4 L556.6 548.2 L555.9 541.6 L555.3 534.9 L554.9 528.1 L554.6 521.5 L554.5 515.2 L554.7 509.4 L555.2 504.3 L556.0 500.0 L557.1 496.6 L558.4 493.8 L560.0 491.7 L561.8 490.0 L563.9 488.6 L566.2 487.6 L568.7 486.7 L571.6 485.9 L574.6 485.0 L578.0 484.0 L581.9 483.0 L586.4 482.3 L591.4 481.8 L596.7 481.4 L602.1 481.0 L607.6 480.6 L612.8 480.2 L617.8 479.7 L622.2 479.0 L626.0 478.0 L629.2 476.8 L632.2 475.5 L634.8 474.1 L637.1 472.5 L639.2 470.9 L641.0 469.2 L642.6 467.4 L643.9 465.6 L645.1 463.8 L646.0 462.0 L646.6 460.1 L646.7 458.2 L646.4 456.1 L645.8 454.0 L645.1 451.9 L644.4 449.8 L643.7 447.7 L643.1 445.7 L642.9 443.8 L643.0 442.0 L643.6 440.4 L644.4 438.8 L645.6 437.4 L646.9 436.0 L648.2 434.6 L649.6 433.3 L650.8 432.0 L651.9 430.7 L652.6 429.4 L653.0 428.0 L652.9 426.6 L652.4 425.2 L651.6 423.7 L650.6 422.3 L649.5 420.9 L648.4 419.5 L647.4 418.1 L646.6 416.7 L646.1 415.3 L646.0 414.0 L646.3 412.7 L646.9 411.5 L647.8 410.3 L648.9 409.1 L650.1 407.9 L651.3 406.7 L652.6 405.5 L653.9 404.4 L655.0 403.2 L656.0 402.0 L656.9 400.8 L657.8 399.6 L658.6 398.5 L659.4 397.3 L660.2 396.1 L661.0 394.9 L661.8 393.7 L662.6 392.5 L663.3 391.3 L664.0 390.0 L664.7 388.7 L665.6 387.4 L666.4 386.1 L667.3 384.8 L668.1 383.5 L668.8 382.1 L669.4 380.7 L669.8 379.2 L670.0 377.7 L670.0 376.0 L669.7 374.2 L669.2 372.4 L668.4 370.4 L667.5 368.3 L666.4 366.2 L665.3 364.1 L664.2 362.0 L663.0 360.0 L662.0 357.9 L661.0 356.0 L660.0 354.2 L659.0 352.7 L657.9 351.3 L656.7 350.0 L655.6 348.6 L654.6 347.1 L653.7 345.4 L652.9 343.4 L652.3 340.9 L652.0 338.0 L652.0 334.6 L652.3 331.0 L652.8 327.0 L653.6 322.8 L654.4 318.2 L655.2 313.5 L655.9 308.4 L656.5 303.2 L656.9 297.7 L657.0 292.0 L656.9 286.0 L656.7 279.5 L656.4 272.8 L656.1 265.7 L655.6 258.5 L654.9 251.2 L654.0 243.8 L652.9 236.4 L651.6 229.1 L650.0 222.0 L648.1 214.9 L646.1 207.6 L643.8 200.2 L641.4 192.8 L638.7 185.5 L635.8 178.3 L632.7 171.2 L629.3 164.5 L625.8 158.0 L622.0 152.0 L617.9 146.3 L613.6 140.8 L608.9 135.6 L604.1 130.6 L599.0 125.9 L593.8 121.4 L588.4 117.1 L583.0 113.2 L577.5 109.4 L572.0 106.0 L566.4 102.9 L560.6 100.1 L554.6 97.6 L548.6 95.4 L542.4 93.4 L536.3 91.6 L530.1 90.0 L524.0 88.6 L517.9 87.2 L512.0 86.0 L506.3 84.9 L500.9 83.9 L495.6 83.1 L490.3 82.4 L485.1 81.9 L479.7 81.5 L474.1 81.4 L468.1 81.4 L461.8 81.6 Z" fill="#fdfaf4" stroke="#b5a893" stroke-width="3"/><path class="brain" d="M292.0 302.0 L289.8 296.1 L288.0 289.2 L286.5 281.5 L285.4 273.3 L284.6 264.6 L284.3 255.8 L284.5 246.9 L285.1 238.2 L286.3 229.8 L288.0 222.0 L290.3 214.5 L293.0 206.9 L296.3 199.3 L300.0 191.8 L304.2 184.5 L308.9 177.4 L314.1 170.5 L319.6 163.9 L325.6 157.7 L332.0 152.0 L339.0 146.6 L346.6 141.5 L354.7 136.6 L363.4 132.0 L372.4 127.8 L381.7 123.8 L391.2 120.3 L400.8 117.1 L410.4 114.3 L420.0 112.0 L429.7 110.1 L439.9 108.6 L450.3 107.4 L460.9 106.6 L471.6 106.2 L482.3 106.2 L492.7 106.6 L502.9 107.4 L512.7 108.5 L522.0 110.0 L531.0 111.9 L539.9 114.3 L548.6 117.0 L557.1 120.1 L565.4 123.6 L573.3 127.5 L580.7 131.7 L587.7 136.1 L594.2 140.9 L600.0 146.0 L605.2 151.5 L610.0 157.6 L614.2 164.0 L617.9 170.9 L621.2 178.0 L624.1 185.3 L626.6 192.6 L628.8 199.9 L630.5 207.1 L632.0 214.0 L633.1 221.0 L633.8 228.4 L634.2 236.0 L634.2 243.6 L633.8 251.1 L633.0 258.4 L631.8 265.3 L630.2 271.6 L628.3 277.2 L626.0 282.0 L623.2 285.9 L619.9 289.2 L616.2 291.9 L612.0 294.0 L607.5 295.8 L602.7 297.1 L597.7 298.1 L592.6 298.9 L587.3 299.5 L582.0 300.0 L576.5 300.2 L570.6 299.8 L564.3 298.9 L557.9 297.8 L551.4 296.5 L544.8 295.2 L538.3 293.9 L531.9 292.9 L525.8 292.2 L520.0 292.0 L514.5 292.2 L509.0 292.5 L503.7 293.0 L498.6 293.6 L493.5 294.5 L488.6 295.6 L483.7 296.8 L479.0 298.3 L474.5 300.0 L470.0 302.0 L465.8 304.5 L461.8 307.7 L458.1 311.4 L454.5 315.3 L451.0 319.4 L447.5 323.3 L443.9 326.9 L440.2 330.1 L436.2 332.5 L432.0 334.0 L427.5 334.5 L422.7 334.1 L417.8 333.0 L412.8 331.4 L407.6 329.5 L402.4 327.5 L397.2 325.5 L392.1 323.8 L387.0 322.6 L382.0 322.0 L377.1 322.2 L372.2 322.9 L367.3 324.1 L362.4 325.5 L357.5 327.0 L352.7 328.4 L347.9 329.6 L343.2 330.4 L338.5 330.6 L334.0 330.0 L329.4 328.9 L324.6 327.5 L319.8 325.9 L314.9 323.9 L310.2 321.5 L305.8 318.7 L301.6 315.4 L297.9 311.5 L294.6 307.1 Z" fill="#f7f1e6" stroke="#d9cfbf" stroke-width="2.5"/><ellipse class="cerebellum" cx="336" cy="380" rx="60" ry="44" fill="#f4ede1" stroke="#d9cfbf" stroke-width="2.5"/><path class="brainstem" d="M424 330 C 418 380, 410 420, 404 472" stroke="#e6ddcf" stroke-width="26" fill="none" stroke-linecap="round"/><ellipse class="heart" cx="572" cy="866" rx="54" ry="70" fill="#f9e3dc" stroke="#e8bcae" stroke-width="2.5"/><ellipse class="kidney" cx="490" cy="1190" rx="34" ry="48" fill="#f5e7d0" stroke="#e1caa6" stroke-width="2.5"/><path class="palate" d="M640.0 418.0 L636.9 418.5 L632.9 419.3 L628.1 420.1 L622.8 421.1 L617.1 422.1 L611.2 423.1 L605.5 424.1 L600.0 425.0 L594.6 425.8 L589.0 426.5 L583.4 427.2 L577.6 427.9 L571.9 428.7 L566.4 429.6 L561.0 430.7 L556.0 432.0 L551.0 433.7 L546.0 435.7 L541.0 438.0 L536.2 440.4 L531.8 442.8 L527.9 444.9 L524.6 446.7 L522.0 448.0" stroke="#d9cfbf" stroke-width="3" fill="none"/><path class="spine" d="M402.0 470.0 L402.3 476.6 L402.8 485.2 L403.2 495.3 L403.8 506.7 L404.4 518.9 L405.0 531.6 L405.7 544.4 L406.4 557.0 L407.2 569.0 L408.0 580.0 L409.0 590.3 L410.2 600.3 L411.6 610.2 L413.1 619.9 L414.5 629.5 L415.8 639.1 L416.9 648.7 L417.7 658.3 L418.1 668.1 L418.0 678.0 L417.3 688.1 L416.1 698.2 L414.5 708.5 L412.6 718.8 L410.4 729.1 L408.2 739.4 L405.9 749.6 L403.7 759.9 L401.7 770.0 L400.0 780.0 L398.4 789.8 L396.7 799.3 L395.1 808.6 L393.4 817.9 L391.9 827.2 L390.4 836.6 L389.2 846.1 L388.2 856.0 L387.4 866.3 L387.0 877.0 L386.9 888.2 L387.0 899.7 L387.3 911.5 L387.9 923.6 L388.6 935.9 L389.6 948.5 L390.7 961.2 L392.0 974.0 L393.4 987.0 L395.0 1000.0 L396.8 1013.2 L398.9 1026.7 L401.2 1040.5 L403.6 1054.4 L406.2 1068.4 L409.0 1082.5 L411.7 1096.6 L414.5 1110.5 L417.3 1124.4 L420.0 1138.0 L422.7 1151.5 L425.5 1164.8 L428.4 1178.1 L431.4 1191.3 L434.3 1204.5 L437.2 1217.6 L440.1 1230.7 L442.9 1243.8 L445.5 1256.9 L448.0 1270.0 L450.6 1283.3 L453.5 1296.9 L456.6 1310.7 L459.6 1324.4 L462.4 1338.1 L464.9 1351.6 L466.9 1364.6 L468.2 1377.1 L468.6 1389.0 L468.0 1400.0 L466.1 1410.2 L463.0 1419.5 L458.8 1428.3 L454.0 1436.4 L448.7 1444.2 L443.2 1451.8 L437.8 1459.2 L432.8 1466.6 L428.4 1474.2 L425.0 1482.0 L422.3 1490.1 L420.0 1498.2 L418.0 1506.3 L416.3 1514.4 L414.8 1522.5 L413.6 1530.4 L412.5 1538.2 L411.6 1545.7 L410.8 1553.0 L410.0 1560.0 L409.3 1566.6 L408.8 1573.0 L408.3 1579.1 L408.1 1585.0 L407.9 1590.8 L408.0 1596.3 L408.2 1601.8 L408.6 1607.2 L409.2 1612.6 L410.0 1618.0 L411.2 1623.5 L412.7 1629.3 L414.6 1635.2 L416.8 1641.0 L419.0 1646.6 L421.2 1652.0 L423.4 1656.9 L425.3 1661.3 L426.8 1665.1 L428.0 1668.0" stroke="#ece4d6" stroke-width="34" fill="none" stroke-linecap="round"/><line class="vertebra" x1="419.8" y1="505.9" x2="387.8" y2="507.4" stroke="#d6cab6" stroke-width="2"/><line class="vertebra" x1="422.4" y1="556.0" x2="390.5" y2="558.0" stroke="#d6cab6" stroke-width="2"/><line class="vertebra" x1="426.1" y1="598.2" x2="394.3" y2="602.4" stroke="#d6cab6" stroke-width="2"/><line class="vertebra" x1="431.7" y1="637.1" x2="400.0" y2="641.1" stroke="#d6cab6" stroke-width="2"/><line class="vertebra" x1="434.0" y1="678.6" x2="402.0" y2="677.4" stroke="#d6cab6" stroke-width="2"/><line class="vertebra" x1="428.3" y1="721.8" x2="396.9" y2="715.7" stroke="#d6cab6" stroke-width="2"/><line class="vertebra" x1="419.4" y1="763.1" x2="388.1" y2="756.6" stroke="#d6cab6" stroke-width="2"/><line class="vertebra" x1="412.5" y1="802.1" x2="381.0" y2="796.5" stroke="#d6cab6" stroke-width="2"/><line class="vertebra" x1="406.3" y1="838.8" x2="374.6" y2="834.3" stroke="#d6cab6" stroke-width="2"/><line class="vertebra" x1="403.0" y1="877.4" x2="371.0" y2="876.6" stroke="#d6cab6" stroke-width="2"/><line class="vertebra" x1="403.8" y1="922.8" x2="371.9" y2="924.5" stroke="#d6cab6" stroke-width="2"/><line class="vertebra" x1="407.9" y1="972.3" x2="376.1" y2="975.7" stroke="#d6cab6" stroke-width="2"/><line class="vertebra" x1="414.7" y1="1024.2" x2="383.1" y2="1029.3" stroke="#d6cab6" stroke-width="2"/><line class="vertebra" x1="424.7" y1="1079.4" x2="393.3" y2="1085.6" stroke="#d6cab6" stroke-width="2"/><line class="vertebra" x1="435.7" y1="1134.9" x2="404.3" y2="1141.1" stroke="#d6cab6" stroke-width="2"/><line class="vertebra" x1="447.0" y1="1187.8" x2="415.8" y2="1194.8" stroke="#d6cab6" stroke-width="2"/><line class="vertebra" x1="458.5" y1="1240.6" x2="427.2" y2="1247.1" stroke="#d6cab6" stroke-width="2"/><line class="vertebra" x1="469.2" y1="1293.5" x2="437.9" y2="1300.3" stroke="#d6cab6" stroke-width="2"/><line class="vertebra" x1="480.7" y1="1348.9" x2="449.1" y2="1354.2" stroke="#d6cab6" stroke-width="2"/><line class="vertebra" x1="483.9" y1="1401.8" x2="452.1" y2="1398.2" stroke="#d6cab6" stroke-width="2"/><line class="vertebra" x1="467.5" y1="1445.0" x2="440.5" y2="1427.9" stroke="#d6cab6" stroke-width="2"/><line class="vertebra" x1="446.4" y1="1475.1" x2="419.3" y2="1458.1" stroke="#d6cab6" stroke-width="2"/><line class="vertebra" x1="435.4" y1="1502.3" x2="404.5" y2="1494.1" stroke="#d6cab6" stroke-width="2"/><line class="vertebra" x1="429.4" y1="1532.7" x2="397.7" y2="1528.1" stroke="#d6cab6" stroke-width="2"/><line class="vertebra" x1="425.9" y1="1561.7" x2="394.1" y2="1558.3" stroke="#d6cab6" stroke-width="2"/><line class="vertebra" x1="424.0" y1="1585.6" x2="392.1" y2="1584.5" stroke="#d6cab6" stroke-width="2"/><line class="vertebra" x1="424.5" y1="1605.8" x2="392.7" y2="1608.7" stroke="#d6cab6" stroke-width="2"/><line class="vertebra" x1="428.1" y1="1624.7" x2="397.4" y2="1633.9" stroke="#d6cab6" stroke-width="2"/><line class="vertebra" x1="436.0" y1="1645.8" x2="406.5" y2="1658.2" stroke="#d6cab6" stroke-width="2"/><text class="organ-label" x="520" y="190" font-size="20" fill="#b3a68f" text-anchor="middle">大腦</text><text class="organ-label" x="336" y="388" font-size="20" fill="#b3a68f" text-anchor="middle">小腦</text><text class="organ-label" x="600" y="838" font-size="20" fill="#b3a68f" text-anchor="middle">心臟</text><text class="organ-label" x="470" y="1262" font-size="20" fill="#b3a68f" text-anchor="middle">腎</text></template>
+<canvas id="sky" aria-hidden="true"></canvas>
+<canvas id="ghost" aria-hidden="true"></canvas>
+<span class="preload" aria-hidden="true">日月金木水火土</span>
+
+<main class="app">
+  <aside class="col col-side col-left">
+    <header class="p-title">
+      <h1>溶化</h1>
+    </header>
+    <div class="p-name">
+      <label for="dao-name">修道人</label>
+      <input id="dao-name" type="text" autocomplete="off" maxlength="16" placeholder="寫上你的名字">
+    </div>
+    <section class="p-modes" aria-label="功法">
+      <h2 class="sec-title">功法</h2>
+      <div class="modes"><div class="mode-card"><i></i><span class="m-name">溶化</span><span class="m-sub">後面上、前面下，回到大腦</span><p class="m-desc"></p></div></div>
+    </section>
+    <section class="p-seq" aria-label="站序">
+      <h2 class="sec-title">站序</h2>
+      <div class="seq" id="seq"></div>
+    </section>
+    <div class="about">
+      <ul>
+        <li>人面向右：右邊是身體前面，左邊是背後</li>
+        <li>每一遍：起手集氣 → 後面上、前面下，回到大腦。時間到或按「收功」，這一遍跑完就停</li>
+        <li>起手有兩種：老師秘傳是吸氣時會陰、胎元一起吸，吸滿在胎元後三寸（胎元正後方、會陰正上方，跟會陰成 90 度），肚子收，再下到會陰、沿背後往上；書上是從鼻孔吸氣，下到心竅、胎元、陰蹻（灰色虛線），從陰蹻上</li>
+        <li>溶化（金線）：陰蹻沿背後上到玉枕，上頭頂泥丸、到透明綜閤（眉心），再從人中往下經舌根、重樓、降宮、陽維穴、心竅、祖海，回到胎元、胎元後三寸，再從腎竅往上回到大腦（沿水路到靈台）</li>
+        <li>點圖上的點或站名可以看說明</li>
+      </ul>
+    </div>
+  </aside>
+
+  <section class="col col-center" aria-label="人體運行">
+    <div class="steps-wrap">
+      <ol class="steps" id="steps">
+      </ol>
+      <p class="phase" id="phase" aria-live="polite"></p>
+    </div>
+    <div class="stage"><svg class="fig" id="fig" role="img" aria-label="人體側面圖，標出溶化經過的點和路線"></svg></div>
+  </section>
+
+  <aside class="col col-side col-right">
+    <section class="p-settings" aria-label="這次練功">
+      <h2 class="sec-title">這次練功</h2>
+      <div class="set"><b>起手</b><div class="seg" id="seg-start">
+        <button data-start="teacher" aria-pressed="true">老師秘傳</button><button data-start="book" aria-pressed="false">書上</button></div></div>
+      <div class="set"><b>時長</b><div class="seg" id="seg-dur">
+        <button data-min="0" aria-pressed="true">持續</button><button data-min="5" aria-pressed="false">5 分</button><button data-min="15" aria-pressed="false">15 分</button><button data-min="30" aria-pressed="false">30 分</button><button data-min="60" aria-pressed="false">60 分</button></div></div>
+    </section>
+    <section class="actions" aria-label="練功按鈕">
+      <div class="btns"><button id="play" type="button" data-s="idle">開始練功</button><button id="finish" type="button" aria-pressed="false" hidden>收功</button></div>
+      <div class="clock"><span id="clock-l">持續模式・按收功結束</span><b id="clock">00:00</b></div>
+      <div class="gauge"><span id="gauge-l">呼吸順順的就好</span><div class="bar"><i id="gauge"></i></div></div>
+    </section>
+    <section class="p-card" aria-label="目前這一站">
+      <article class="card" id="card" aria-live="polite">
+        <div class="who"><span class="badge"></span><h3 class="name"></h3></div>
+        <dl>
+          <div><dt>在身體哪裡</dt><dd class="where"></dd></div>
+          <div class="role-row"><dt>作用</dt><dd class="role"></dd></div>
+        </dl>
+      </article>
+    </section>
+  </aside>
+</main>
+
+<script>
+// 三路圖：把資料檔的點和路線畫成人體側面圖。
+// 內容（名稱、位置）一律從資料檔 D 拿；這裡只有畫法和標籤擺位。
+const D = JSON.parse(document.getElementById('sanlu-data').textContent);
+const P = Object.fromEntries(D.points.map(p => [p.id, p]));
+const NS = 'http://www.w3.org/2000/svg';
+const ROUTE_KEY = { 風: 'wind', 水: 'water', 火: 'fire', 吸氣: 'breath', 回程: 'return' };
+const SHARED = new Set([1, 16, 17, 18]); // 底稿：深色點＝三路共用
+const EXTRA = {}; // 資料檔以外補充的點（用名稱當代號，例如溶化經過的泥丸、人中）
+
+// 標籤擺位照底稿人體圖：[對齊, 文字 x, 文字中線 y, 引線終點 x, 引線終點 y]（引線起點＝點本身）
+const LABEL = {
+  1: ['middle', 562, 1776, 562, 1752], 2: ['end', 282, 1618, 290, 1618], 3: ['end', 276, 1482, 284, 1482],
+  4: ['end', 296, 1400, 304, 1400], 5: ['end', 318, 1138, 326, 1138], 6: ['end', 282, 877, 290, 877],
+  7: ['end', 292, 678, 300, 678], 8: ['end', 236, 360, 244, 360], 9: ['start', 514, 1218, 506, 1218],
+  10: ['start', 502, 1120, 494, 1120], 11: ['end', 480, 552, 488, 552], 12: ['start', 590, 897, 582, 897],
+  13: ['start', 584, 752, null, null], 14: ['start', 556, 665, null, null], 15: ['start', 566, 585, 558, 585],
+  16: ['start', 700, 462, 692, 462], 17: ['end', 392, 292, 400, 292], 18: ['start', 486, 232, null, null],
+  19: ['start', 718, 1328, 710, 1328], 20: ['start', 700, 374, 692, 374],
+};
+const ALIAS_ON_FIGURE = { 1: 'inline', 16: 'below', 18: 'inline' }; // 底稿圖上有寫別名的三個點
+
+function el(tag, attrs = {}, parent) {
+  const e = document.createElementNS(NS, tag);
+  for (const [k, v] of Object.entries(attrs)) if (v != null) e.setAttribute(k, v);
+  if (parent) parent.appendChild(e);
+  return e;
+}
+
+// 資料檔的路線：數字＝點、[x,y]＝轉彎點、"tip"＝靈台之尖；用 Catmull-Rom 串起來（跟底稿人體圖同算法）
+function resolve(it) {
+  if (typeof it === 'number') return [P[it].x, P[it].y];
+  if (it === 'tip') return D.tip_of_lingtai;
+  if (typeof it === 'string' && EXTRA[it]) return [EXTRA[it].x, EXTRA[it].y];
+  return it;
+}
+function buildRoute(items, n = 18) {
+  const pts = items.map(resolve);
+  const out = [pts[0].slice()];
+  const marks = [{ item: items[0], i: 0 }];
+  for (let k = 0; k < pts.length - 1; k++) {
+    const p0 = pts[Math.max(k - 1, 0)], p1 = pts[k], p2 = pts[k + 1], p3 = pts[Math.min(k + 2, pts.length - 1)];
+    for (let s = 1; s <= n; s++) {
+      const t = s / n, t2 = t * t, t3 = t2 * t;
+      out.push([0, 1].map(j => 0.5 * (2 * p1[j] + (-p0[j] + p2[j]) * t + (2 * p0[j] - 5 * p1[j] + 4 * p2[j] - p3[j]) * t2 + (-p0[j] + 3 * p1[j] - 3 * p2[j] + p3[j]) * t3)));
+    }
+    marks.push({ item: items[k + 1], i: out.length - 1 });
+  }
+  const L = [0];
+  for (let i = 1; i < out.length; i++) L.push(L[i - 1] + Math.hypot(out[i][0] - out[i - 1][0], out[i][1] - out[i - 1][1]));
+  const stops = marks
+    .filter(m => typeof m.item === 'number' || m.item === 'tip' || (typeof m.item === 'string' && EXTRA[m.item]))
+    .map(m => ({ id: m.item === 'tip' ? 18 : m.item, tip: m.item === 'tip', s: L[m.i] }));
+  return { pts: out, L, total: L[L.length - 1], stops, d: 'M' + out.map(p => p[0].toFixed(1) + ' ' + p[1].toFixed(1)).join(' L') };
+}
+function pointAt(route, s) {
+  const { pts, L } = route;
+  if (s <= 0) return pts[0];
+  if (s >= route.total) return pts[pts.length - 1];
+  let lo = 0, hi = L.length - 1;
+  while (hi - lo > 1) { const mid = (lo + hi) >> 1; if (L[mid] < s) lo = mid; else hi = mid; }
+  const f = (s - L[lo]) / (L[hi] - L[lo] || 1);
+  return [pts[lo][0] + (pts[hi][0] - pts[lo][0]) * f, pts[lo][1] + (pts[hi][1] - pts[lo][1]) * f];
+}
+const ROUTES = Object.fromEntries(Object.entries(D.paths).map(([k, items]) => [k, buildRoute(items)]));
+
+// 畫一張圖：底圖（人體）＋各路線（暗線＋亮線）＋20 個點與標籤；only＝要畫哪幾條線（溶化網頁只畫吸氣線）
+function drawFigure(svg, uid, glow = 6, only = Object.keys(ROUTES)) {
+  svg.setAttribute('viewBox', '160 70 680 1730');
+  const defs = el('defs', {}, svg);
+  const f = el('filter', { id: 'glow-' + uid, x: '-50%', y: '-50%', width: '200%', height: '200%' }, defs);
+  el('feGaussianBlur', { in: 'SourceGraphic', stdDeviation: glow, result: 'b' }, f);
+  const m = el('feMerge', {}, f);
+  el('feMergeNode', { in: 'b' }, m); el('feMergeNode', { in: 'b' }, m); el('feMergeNode', { in: 'SourceGraphic' }, m);
+
+  const anatomy = el('g', { class: 'anatomy' }, svg);
+  anatomy.innerHTML = document.getElementById('sanlu-base').innerHTML;
+
+  const routes = el('g', { class: 'routes' }, svg);
+  const live = {};
+  for (const k of only) {
+    const r = ROUTES[k], key = ROUTE_KEY[k];
+    el('path', { d: r.d, class: `ghost r-${key}`, 'data-route': k }, routes);
+    const p = el('path', { d: r.d, class: `live r-${key}`, filter: `url(#glow-${uid})`, 'stroke-dasharray': r.total, 'stroke-dashoffset': r.total }, routes);
+    live[k] = p;
+  }
+  const head = el('g', { class: 'head', filter: `url(#glow-${uid})` }, svg);
+  el('circle', { r: 26, class: 'head-halo' }, head);
+  el('circle', { r: 9, class: 'head-core' }, head);
+
+  const pts = el('g', { class: 'points' }, svg);
+  const nodes = {};
+  for (const p of D.points) {
+    const [anchor, tx, ty, lx, ly] = LABEL[p.id];
+    const g = el('g', { class: 'pt' + (SHARED.has(p.id) ? ' shared' : ''), 'data-id': p.id, tabindex: 0, role: 'button', 'aria-label': `${p.id} ${p.name}` }, pts);
+    if (lx != null) el('line', { x1: p.x, y1: p.y, x2: lx, y2: ly, class: 'leader' }, g);
+    el('circle', { cx: p.x, cy: p.y, r: 24, class: 'halo', filter: `url(#glow-${uid})` }, g);
+    el('circle', { cx: p.x, cy: p.y, r: 18, class: 'dot' }, g);
+    el('text', { x: p.x, y: p.y, class: 'num', 'text-anchor': 'middle', 'dominant-baseline': 'central' }, g).textContent = p.id;
+    const t = el('text', { x: tx, y: ty, class: 'lbl', 'text-anchor': anchor, 'dominant-baseline': 'central' }, g);
+    t.appendChild(document.createTextNode(p.name));
+    const alias = ALIAS_ON_FIGURE[p.id] && p.alias;
+    if (alias && ALIAS_ON_FIGURE[p.id] === 'inline') {
+      el('tspan', { class: 'alias', dx: 6 }, t).textContent = `（${alias}）`;
+    } else if (alias) {
+      el('text', { x: tx, y: ty + 30, class: 'lbl alias', 'text-anchor': anchor, 'dominant-baseline': 'central' }, g).textContent = `（${alias}）`;
+    }
+    nodes[p.id] = g;
+  }
+  return { svg, live, head, nodes };
+}
+
+// 靜態擺一個狀態：某條路走到第 s 長度（給樣板和暫停畫面用）
+function setProgress(fig, routeKey, s) {
+  const r = ROUTES[routeKey];
+  fig.live[routeKey].setAttribute('stroke-dashoffset', Math.max(0, r.total - s));
+  const [x, y] = pointAt(r, s);
+  fig.head.setAttribute('transform', `translate(${x.toFixed(1)} ${y.toFixed(1)})`);
+  fig.head.dataset.route = ROUTE_KEY[routeKey];
+}
+function lightPoint(fig, id, routeKey, current = false) {
+  const g = fig.nodes[id];
+  g.classList.add('lit');
+  g.dataset.route = ROUTE_KEY[routeKey];
+  g.classList.toggle('current', current);
+}
+
+
+// ---------- 溶化：從風水火三路通用版複製出來，只留溶化（路線、點、起手兩種、時長、收功照通用版） ----------
+const CSSV = { breath: 'var(--breath)', gold: 'var(--gold)', melt: 'var(--gold-2)' };
+
+// ---------- 節奏：吸氣 2–3 秒、均速經過 ----------
+const INHALE = 2600, HOLD = 380, SPEED = 0.2 /* 圖上單位／毫秒 */, BETWEEN = 900;
+const MELT_SPEED = SPEED * .85;
+
+// ---------- 溶化補充的點（資料檔以外） ----------
+const RONG = JSON.parse(document.getElementById('rong-data').textContent);
+const PX = {};
+RONG.points.forEach(p => { EXTRA[p.key] = p; PX[p.key] = p; });
+const ptOf = id => P[id] || PX[id];
+const nameOf = id => typeof id === 'number' ? `${id} ${P[id].name}` : PX[id].name;
+document.querySelector('.m-desc').textContent = `${RONG.card.one}陰蹻沿背後上到玉枕，上頭頂泥丸、到透明綜閤（眉心），再從人中往下經舌根、重樓、降宮、陽維穴、心竅、祖海，回到胎元、胎元後三寸，再從腎竅往上回到大腦。`;
+
+const svg = document.getElementById('fig');
+const fig = drawFigure(svg, 'main', 6, ['吸氣']); // 只畫書上起手的吸氣線；風、水、火、回程的線不畫
+fig.head.remove();
+const routesG = svg.querySelector('.routes');
+fig.live['吸氣'] = el('path', { d: ROUTES['吸氣'].d, class: 'breath-live', 'stroke-dasharray': ROUTES['吸氣'].total, 'stroke-dashoffset': ROUTES['吸氣'].total }, routesG);
+const upto = (items, id) => items.slice(0, items.indexOf(id) + 1);
+const BACK3 = '胎元後三寸';                                  // 胎元正後方、會陰正上方（跟會陰成 90 度）
+// 溶化（老師口述的真正路徑）：陰蹻沿風路背後上到玉枕 → 泥丸（頭頂）→ 透明綜閤（眉心）→ 人中 → 舌根 → 重樓 → 降宮 → 陽維穴 → 心竅 → 祖海 → 胎元 → 胎元後三寸 → 腎竅沿水路往上到大腦
+const MELT_ITEMS = [...upto(D.paths['風'], 8), ...RONG.front, BACK3, ...D.paths['水'].slice(D.paths['水'].indexOf(9))];
+ROUTES['溶化'] = buildRoute(MELT_ITEMS);
+fig.live['溶化'] = el('path', { d: ROUTES['溶化'].d, class: 'live r-melt', filter: 'url(#glow-main)', 'stroke-dasharray': ROUTES['溶化'].total, 'stroke-dashoffset': ROUTES['溶化'].total }, routesG);
+routesG.prepend(el('path', { d: ROUTES['溶化'].d, class: 'ghost r-melt-g' }));
+
+// 完全垂直或水平的線，發光範圍不能跟著線寬算（寬度是零會整段不畫），改用固定範圍
+(() => {
+  const f = el('filter', { id: 'glow-wide', filterUnits: 'userSpaceOnUse', x: -100, y: -100, width: 1360, height: 1988 }, svg.querySelector('defs'));
+  el('feGaussianBlur', { in: 'SourceGraphic', stdDeviation: 6, result: 'b' }, f);
+  const m = el('feMerge', {}, f); el('feMergeNode', { in: 'b' }, m); el('feMergeNode', { in: 'b' }, m); el('feMergeNode', { in: 'SourceGraphic' }, m);
+})();
+
+// ---------- 老師秘傳起手：會陰、胎元一起吸，吸滿在胎元後三寸，再下到會陰（金線） ----------
+ROUTES['集會陰'] = buildRoute([1, BACK3]); ROUTES['集胎元'] = buildRoute([19, BACK3]);
+ROUTES['起溶'] = buildRoute([BACK3, 1]);
+['集會陰', '集胎元', '起溶'].forEach(k => fig.live[k] = el('path', { d: ROUTES[k].d, class: 'live r-melt', filter: 'url(#glow-wide)', 'stroke-dasharray': ROUTES[k].total, 'stroke-dashoffset': ROUTES[k].total }, routesG));
+
+// 補充的點畫在圖上（金色小點、不編號）
+const ptsG = svg.querySelector('.points');
+RONG.points.forEach(p => {
+  const [anchor, tx, ty, lx, ly] = p.label;
+  const g = el('g', { class: 'pt extra', 'data-id': p.key, tabindex: 0, role: 'button', 'aria-label': p.name }, ptsG);
+  el('line', { x1: p.x, y1: p.y, x2: lx, y2: ly, class: 'leader' }, g);
+  el('circle', { cx: p.x, cy: p.y, r: 18, class: 'halo', filter: 'url(#glow-main)' }, g);
+  el('circle', { cx: p.x, cy: p.y, r: 10, class: 'dot' }, g);
+  el('text', { x: tx, y: ty, class: 'lbl', 'text-anchor': anchor, 'dominant-baseline': 'central' }, g).textContent = p.name;
+  fig.nodes[p.key] = g;
+});
+
+// ---------- 老師秘傳起手：胎元、會陰集氣 ----------
+const gatherG = el('g', { class: 'gather', filter: 'url(#glow-main)' });
+svg.insertBefore(gatherG, ptsG);
+gatherG.style.opacity = 0;
+const GATHER = [19, 1].map(id => {
+  let sd = id * 97; const rr = () => (sd = (sd * 16807) % 2147483647) / 2147483647;
+  const motes = Array.from({ length: 18 }, () => ({ a: rr() * Math.PI * 2, r0: 120 + rr() * 140, d: rr() * .5, c: el('circle', { r: 3.4, class: 'mote' }, gatherG) }));
+  const rings = [0, 1].map(() => el('circle', { class: 'ring', cx: P[id].x, cy: P[id].y }, gatherG));
+  return { p: P[id], motes, rings };
+});
+function drawGather(u) {
+  for (const { p, motes, rings } of GATHER) {
+    for (const m of motes) {
+      const q = Math.max(0, Math.min(1, (u - m.d) / .5)), r = m.r0 * (1 - q * q);
+      m.c.setAttribute('cx', (p.x + Math.cos(m.a) * r).toFixed(1));
+      m.c.setAttribute('cy', (p.y + Math.sin(m.a) * r).toFixed(1));
+      m.c.setAttribute('opacity', q <= 0 || q >= 1 ? 0 : (Math.min(1, q * 4) * .9).toFixed(2));
+    }
+    rings.forEach((c, k) => {
+      const f = (u * 1.6 + k * .5) % 1;
+      c.setAttribute('r', (18 + 130 * (1 - f)).toFixed(1));
+      c.setAttribute('opacity', (u > .96 ? 0 : f * .55).toFixed(2));
+    });
+  }
+}
+
+const heads = {};
+function headFor(r) {
+  if (!heads[r]) {
+    const g = el('g', { class: 'head', filter: 'url(#glow-main)' }, svg);
+    el('circle', { r: 24, class: 'head-halo' }, g); el('circle', { r: 8.5, class: 'head-core' }, g);
+    g.dataset.route = r === '吸氣' ? 'breath' : 'merged';
+    g.style.opacity = 0;
+    heads[r] = g;
+  }
+  return heads[r];
+}
+
+const $ = id => document.getElementById(id);
+const playBtn = $('play'), finBtn = $('finish'), phaseEl = $('phase'), gaugeEl = $('gauge'), card = $('card'), seqEl = $('seq');
+
+// ---------- 修道人：名字只存在這台裝置的瀏覽器 ----------
+const nameIn = $('dao-name');
+try { nameIn.value = localStorage.getItem('rong.name') || ''; } catch (e) {}
+nameIn.addEventListener('input', () => { try { localStorage.setItem('rong.name', nameIn.value.trim()); } catch (e) {} });
+
+let start = 'teacher', durMin = 0;
+let state = 'idle', stage = 'idle', plan = [], idx = 0, phT = 0, last = 0, raf = 0;
+let elapsed = 0, round = 0, closing = false;
+
+// ---------- 資訊卡：只放「在身體哪裡」「作用」（內容從資料檔拿；溶化補充的點從補充檔拿） ----------
+function colorOf(id, route) {
+  if (SHARED.has(id) || PX[id] || route === '集氣' || route === '溶化') return 'gold';
+  if (route === '吸氣') return 'breath';
+  return 'none';
+}
+function routeFor(id) { // 點圖時：溶化經過的點算溶化；其他是起手的點
+  if (MELT_ITEMS.includes(id) || PX[id]) return '溶化';
+  if (start === 'teacher') return [19, 1].includes(id) ? '集氣' : null;
+  return D.paths['吸氣'].includes(id) ? '吸氣' : null;
+}
+function showCard(id, route) {
+  const p = ptOf(id), c = colorOf(id, route);
+  const b = card.querySelector('.badge');
+  b.textContent = typeof id === 'number' ? id : '◇'; b.dataset.c = c; b.style.setProperty('--bc', CSSV[c] || 'transparent');
+  const nm = card.querySelector('.name'); nm.innerHTML = ''; nm.append(p.name);
+  if (p.alias) { const s = document.createElement('small'); s.textContent = p.alias; nm.append(s); }
+  card.querySelector('.where').textContent = p.where;
+  card.querySelector('.role').textContent = p.role;
+  card.querySelector('.role-row').hidden = !p.role; // 作用是空的（例如項骨）就不顯示
+  card.classList.remove('swap'); void card.offsetWidth; card.classList.add('swap');
+  seqEl.querySelectorAll('button.cur').forEach(x => x.classList.remove('cur'));
+  const chip = seqEl.querySelector(`button[data-id="${id}"][data-route="${route}"]`) || seqEl.querySelector(`button[data-id="${id}"]`);
+  if (chip) chip.classList.add('cur');
+}
+
+// ---------- 站序（照路線順序） ----------
+function chipRow(label, route, ids, cssColor, sep = '→') {
+  const row = document.createElement('div'); row.className = 'row'; row.style.setProperty('--c', cssColor);
+  row.innerHTML = `<b>${label}</b>`;
+  ids.forEach((id, i) => {
+    if (i) row.insertAdjacentHTML('beforeend', `<em>${sep}</em>`);
+    const bt = document.createElement('button'); bt.type = 'button';
+    bt.dataset.id = id; bt.dataset.route = route; bt.textContent = nameOf(id);
+    bt.addEventListener('click', () => { showCard(id, route); pingPoint(id); });
+    row.append(bt);
+  });
+  seqEl.append(row);
+}
+const idsOf = r => (r === '溶化' ? (start === 'teacher' ? [BACK3, ...MELT_ITEMS] : MELT_ITEMS) : D.paths[r])
+  .filter(x => typeof x === 'number' || x === 'tip' || (typeof x === 'string' && EXTRA[x])).map(x => x === 'tip' ? 18 : x);
+function buildSeq() {
+  seqEl.innerHTML = '';
+  if (start === 'teacher') chipRow('集氣', '集氣', [19, 1], CSSV.gold, '＋');
+  else chipRow('吸氣', '吸氣', idsOf('吸氣'), CSSV.breath);
+  chipRow('溶化', '溶化', idsOf('溶化'), CSSV.melt);
+}
+
+// ---------- 點亮與特效 ----------
+function pingPoint(id) { const g = fig.nodes[id]; if (!g) return; g.classList.remove('ping'); void g.getBBox(); g.classList.add('ping'); }
+function light(id, route) {
+  const g = fig.nodes[id];
+  g.classList.add('lit'); g.classList.remove('off');
+  g.dataset.route = route === '吸氣' ? 'breath' : route === '集氣' ? 'gather' : 'gold';
+  Object.values(fig.nodes).forEach(n => n.classList.remove('current'));
+  g.classList.add('current');
+  seqEl.querySelectorAll(`button[data-id="${id}"]`).forEach(c => { if (c.dataset.route === route) c.classList.add('lit'); });
+}
+
+function onStop(route, stop) {
+  const id = stop.id;
+  if (route === '吸氣') { light(id, route); pingPoint(id); showCard(id, route); return; }
+  const from = route; // 起溶＝老師秘傳起手從胎元後三寸下到會陰那段
+  light(id, '溶化'); pingPoint(id); showCard(id, '溶化');
+  const T = { 8: ['溶化：到玉枕，上到頭頂泥丸，再到透明綜閤（眉心）', 'back'], '泥丸': [null, 'front'], '眉心': ['溶化：從人中往下：舌根、重樓、降宮、陽維穴、心竅、祖海', 'front'],
+    '祖海': [`溶化：回到胎元，再到${BACK3}`, 'home'], [BACK3]: [null, 'home'], 9: ['溶化：從腎竅往上，回到大腦', 'brain'], 18: ['溶化：回到大腦（靈台）', 'brain'] }[id];
+  if (T && !(from === '起溶' && id === BACK3)) { if (T[0]) phaseEl.textContent = T[0]; setStep(T[1]); } // 起點也是胎元後三寸，不算「回」
+}
+
+// ---------- 一遍的時間軸 ----------
+const easeInOut = u => 0.5 - Math.cos(Math.PI * u) / 2;
+const lin = u => u;
+const restText = () => '回到大腦（靈台）';
+function makePlan() { // 溶化：後面上、前面下，回到胎元後三寸，再從腎竅往上到大腦；呼吸順順的就好
+  const p = [];
+  const TCH = start === 'teacher';
+  if (TCH) p.push({ kind: 'gather', dur: INHALE, text: `集氣：會陰、胎元一起吸，吸滿在${BACK3}，肚子收`, gauge: u => easeInOut(u) });
+  else p.push({ kind: 'move', dur: INHALE, text: '吸氣往下：鼻孔 → 心竅 → 胎元 → 陰蹻', gauge: u => easeInOut(u), tracks: [{ r: '吸氣', s0: 0, s1: ROUTES['吸氣'].total, ease: easeInOut }] });
+  p.push({ kind: 'hold', dur: HOLD, gauge: () => 1, text: TCH ? `吸滿，從${BACK3}下到會陰，再沿背後往上` : '從陰蹻往上' });
+  if (TCH) p.push({ kind: 'move', melt: true, step: 'back', dur: ROUTES['起溶'].total / SPEED, text: `從${BACK3}下到會陰`, tracks: [{ r: '起溶', s0: 0, s1: ROUTES['起溶'].total, ease: lin }] });
+  p.push({ kind: 'move', melt: true, step: 'back', dur: ROUTES['溶化'].total / MELT_SPEED, text: `溶化：${RONG.card.steps[1]}`, tracks: [{ r: '溶化', s0: 0, s1: ROUTES['溶化'].total, ease: lin }] });
+  p.push({ kind: 'between', step: 'brain', dur: BETWEEN, text: restText(), gauge: () => 0 });
+  return p;
+}
+
+// ---------- 步驟條 ----------
+const STEPS = [['start', '起手'], ['back', '背後往上'], ['front', '前面往下'], ['home', '回胎元後三寸'], ['brain', '腎竅上大腦']];
+function buildSteps() { $('steps').innerHTML = STEPS.map(([k, t]) => `<li data-step="${k}"><span>${t}</span></li>`).join(''); }
+function setStep(s) {
+  const keys = [...document.querySelectorAll('#steps li')].map(li => li.dataset.step), i = keys.indexOf(s);
+  document.querySelectorAll('#steps li').forEach((li, k) => { li.classList.toggle('on', k === i); li.classList.toggle('done', i >= 0 && k < i); });
+}
+
+function enter(ph) {
+  phaseEl.textContent = ph.text;
+  setStep(ph.step || 'start');
+  Object.values(heads).forEach(h => h.style.opacity = 0);
+  if (ph.tracks) ph.tracks.forEach(t => {
+    t.prev = t.s0 > 0 ? t.s0 + 0.01 : -1;
+    const h = headFor(t.r), [x, y] = pointAt(ROUTES[t.r], t.s0);
+    h.setAttribute('transform', `translate(${x.toFixed(1)} ${y.toFixed(1)})`);
+    h.style.opacity = 1;
+  });
+  if (ph.kind === 'gather') { ph.lit = false; gatherG.style.opacity = 1; fig.nodes[19].classList.add('squeeze'); showCard(19, '集氣'); }
+}
+function apply(ph, u) {
+  if (ph.kind === 'gather') {
+    drawGather(u);
+    if (u >= .5 && !ph.lit) { ph.lit = true; light(19, '集氣'); light(1, '集氣'); pingPoint(19); pingPoint(1); }
+    const e = easeInOut(Math.max(0, Math.min(1, (u - .4) / .6)));
+    ['集會陰', '集胎元'].forEach(k => fig.live[k].setAttribute('stroke-dashoffset', (ROUTES[k].total * (1 - e)).toFixed(1)));
+    if (u >= .97 && !ph.full) { ph.full = true; light(BACK3, '集氣'); pingPoint(BACK3); }
+  }
+  if (ph.tracks) for (const t of ph.tracks) {
+    const R = ROUTES[t.r], s = t.s0 + (t.s1 - t.s0) * t.ease(u);
+    fig.live[t.r].setAttribute('stroke-dashoffset', Math.max(0, R.total - s));
+    const [x, y] = pointAt(R, s); heads[t.r].setAttribute('transform', `translate(${x.toFixed(1)} ${y.toFixed(1)})`);
+    for (const st of R.stops) if (st.s > t.prev && st.s <= s + 0.01) onStop(t.r, st);
+    t.prev = s + 0.01;
+  }
+  gaugeEl.style.setProperty('--v', (ph.melt ? 0 : ph.gauge(u)).toFixed(4));
+}
+function exit(ph) {
+  if (ph.kind === 'gather') { gatherG.style.opacity = 0; fig.nodes[19].classList.remove('squeeze'); light(BACK3, '集氣'); showCard(BACK3, '集氣'); }
+}
+function tick(now) {
+  let dt = Math.min(now - last, 250); last = now; // 慢的裝置也照實際秒數走
+  while (state === 'playing') {
+    const ph = plan[idx];
+    if (phT + dt < ph.dur) { phT += dt; elapsed += dt; apply(ph, phT / ph.dur); break; }
+    const used = ph.dur - phT; elapsed += used; dt -= used;
+    apply(ph, 1); exit(ph); idx++; phT = 0;
+    if (idx >= plan.length) { planDone(); break; }
+    enter(plan[idx]);
+  }
+  showClock();
+  if (state === 'playing') raf = requestAnimationFrame(tick);
+}
+
+// ---------- 練功：一遍接一遍，時間到或按收功 → 這一遍跑完就停 ----------
+const mmss = ms => { const s = Math.max(0, Math.floor(ms / 1000)); return `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`; };
+function showClock() {
+  const left = durMin * 60000 - elapsed;
+  if (stage === 'done') $('clock-l').textContent = `收功・共練 ${round} 遍`;
+  else if (closing) $('clock-l').textContent = '收功：這一遍跑完就停';
+  else if (durMin) $('clock-l').textContent = state === 'idle' ? `練 ${durMin} 分鐘，時間到自動收功` : `第 ${round + 1} 遍・還有 ${mmss(left)}`;
+  else $('clock-l').textContent = state === 'idle' ? '持續模式・按收功結束' : `第 ${round + 1} 遍・持續模式`;
+  $('clock').textContent = durMin && state === 'idle' ? mmss(durMin * 60000) : mmss(elapsed);
+}
+function planDone() {
+  if (stage === 'cycle') {
+    round++;
+    if (closing || (durMin && elapsed >= durMin * 60000)) { endAll(); return; }
+    clearVisuals(); plan = makePlan(); idx = 0; phT = 0; enter(plan[0]);
+  }
+}
+function endAll() {
+  stage = 'done'; state = 'done'; cancelAnimationFrame(raf);
+  phaseEl.textContent = `收功：${restText()}。共練 ${round} 遍。`; setStep('brain'); setBtn(); showClock();
+}
+
+function clearVisuals() {
+  Object.entries(fig.live).forEach(([k, p]) => p.setAttribute('stroke-dashoffset', ROUTES[k].total));
+  Object.values(heads).forEach(h => h.style.opacity = 0);
+  Object.values(fig.nodes).forEach(g => { g.classList.remove('lit', 'current', 'ping', 'off'); delete g.dataset.route; });
+  const on = new Set([...idsOf('溶化'), ...(start === 'teacher' ? [19, 1, BACK3] : idsOf('吸氣'))]);
+  Object.entries(fig.nodes).forEach(([id, g]) => { if (!on.has(isNaN(+id) ? id : +id)) g.classList.add('off'); });
+  gatherG.style.opacity = 0; fig.nodes[19].classList.remove('squeeze');
+  svg.dataset.start = start;
+  seqEl.querySelectorAll('button.lit, button.cur').forEach(x => x.classList.remove('lit', 'cur'));
+  gaugeEl.style.setProperty('--v', 0);
+}
+function reset() {
+  cancelAnimationFrame(raf);
+  state = 'idle'; stage = 'idle'; idx = 0; phT = 0; elapsed = 0; round = 0; closing = false;
+  buildSeq(); buildSteps();
+  clearVisuals();
+  phaseEl.textContent = start === 'teacher' ? `按「開始練功」：會陰、胎元一起吸到${BACK3}，吸滿再照站序往上走到靈台之尖` : '按「開始練功」：先從鼻孔吸氣往下到陰蹻，再照站序往上走到靈台之尖';
+  setStep(null);
+  showCard(1, '溶化');
+  seqEl.querySelectorAll('button.cur').forEach(x => x.classList.remove('cur'));
+  setBtn(); showClock();
+}
+function setBtn() {
+  playBtn.dataset.s = state;
+  playBtn.textContent = { idle: '開始練功', playing: '暫停', paused: '繼續', resting: '再練一次', done: '再練一次' }[state];
+  finBtn.hidden = !(stage === 'cycle' && (state === 'playing' || state === 'paused'));
+  finBtn.setAttribute('aria-pressed', closing);
+  finBtn.textContent = closing ? '收功中' : '收功';
+}
+function begin() {
+  reset(); stage = 'cycle';
+  plan = makePlan(); enter(plan[0]);
+  state = 'playing'; last = performance.now(); setBtn(); raf = requestAnimationFrame(tick);
+  if (matchMedia('(max-width: 1099px)').matches) { const r = document.querySelector('.steps-wrap').getBoundingClientRect(); window.scrollTo({ top: scrollY + r.top - 8, behavior: 'smooth' }); }
+}
+
+playBtn.addEventListener('click', () => {
+  if (state === 'playing') { state = 'paused'; cancelAnimationFrame(raf); setBtn(); return; }
+  if (state === 'paused') { state = 'playing'; last = performance.now(); setBtn(); raf = requestAnimationFrame(tick); return; }
+  begin();
+});
+finBtn.addEventListener('click', () => {
+  closing = true; setBtn(); showClock();
+  if (state === 'paused') { state = 'playing'; last = performance.now(); setBtn(); raf = requestAnimationFrame(tick); }
+});
+function pick(groupSel, btn) { document.querySelectorAll(groupSel + ' button').forEach(x => x.setAttribute('aria-pressed', x === btn)); }
+document.querySelectorAll('#seg-start button').forEach(b => b.addEventListener('click', () => { start = b.dataset.start; pick('#seg-start', b); reset(); }));
+document.querySelectorAll('#seg-dur button').forEach(b => b.addEventListener('click', () => { durMin = +b.dataset.min; pick('#seg-dur', b); showClock(); }));
+Object.entries(fig.nodes).forEach(([id, g]) => {
+  const key = isNaN(+id) ? id : +id;
+  const open = () => { showCard(key, routeFor(key)); pingPoint(key); };
+  g.addEventListener('click', open);
+  g.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); } });
+});
+reset();
+</script>
+
+<script>
+// ---------- 背景：七曜金線星盤（月、水、金、日、火、木、土，由內到外）＋淡淡的能量流動 ----------
+(() => {
+  const cv = document.getElementById('sky'), ctx = cv.getContext('2d');
+  const figEl = document.getElementById('fig');
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)');
+  const SEVEN = [ // [字, 週期秒, 亮度, 大小]
+    ['月', 90, .85, 2.4], ['水', 130, .7, 2.0], ['金', 170, .9, 2.6], ['日', 220, 1, 3.6],
+    ['火', 280, .75, 2.3], ['木', 380, .85, 3.0], ['土', 520, .7, 2.7],
+  ];
+  let seed = 11; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  const start = SEVEN.map(() => rnd() * Math.PI * 2);
+  let W = 0, H = 0, dpr = 1, dust = null, parts = [];
+
+  function resize() {
+    dpr = Math.min(window.devicePixelRatio || 1, 1.6);
+    W = innerWidth; H = innerHeight;
+    cv.width = W * dpr; cv.height = H * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    dust = document.createElement('canvas'); dust.width = W * dpr; dust.height = H * dpr;
+    const d = dust.getContext('2d'); d.scale(dpr, dpr);
+    seed = 5;
+    for (let i = 0; i < Math.round(W * H / 9000); i++) {
+      d.globalAlpha = .06 + rnd() * .35; d.fillStyle = rnd() > .7 ? '#f0d9a0' : '#e8e2d4';
+      d.beginPath(); d.arc(rnd() * W, rnd() * H, rnd() * .9 + .25, 0, 7); d.fill();
+    }
+    const n = W < 900 ? 46 : 84;
+    parts = Array.from({ length: n }, () => newPart(true));
+  }
+  function newPart(any) {
+    return { a: Math.random() * Math.PI * 2, f: .25 + Math.random() * .95, w: (Math.random() * .5 + .5) * (Math.random() < .5 ? 1 : 1.15),
+      life: any ? Math.random() : 0, span: 6 + Math.random() * 8, ph: Math.random() * 6.28, gold: Math.random() < .7 };
+  }
+  function center() { // 星盤中心＝人體軀幹（圖上 500, 900）
+    const m = figEl.getScreenCTM(); if (!m) return [W * .5, H * .5, Math.min(W, H) * .5];
+    const p = new DOMPoint(500, 900).matrixTransform(m), q = new DOMPoint(500, 70).matrixTransform(m);
+    return [p.x, p.y, Math.abs(p.y - q.y)];
+  }
+
+  let lastT = 0, acc = 0;
+  function frame(now) {
+    if (!reduce.matches && !document.hidden) requestAnimationFrame(frame);
+    const dt = lastT ? Math.min(now - lastT, 100) : 16; lastT = now; acc += dt;
+    if (acc < 33 && !reduce.matches) return; // 約每秒 30 張就夠
+    const step = acc / 1000; acc = 0;
+    const t = now / 1000;
+    const [cx, cy, U] = center();
+    ctx.clearRect(0, 0, W, H);
+    ctx.globalAlpha = 1; ctx.drawImage(dust, 0, 0, W, H);
+
+    const R = U * 1.08; // 最外圈
+    const radii = SEVEN.map((_, i) => R * (.36 + i * .107));
+    ctx.save(); ctx.translate(cx, cy);
+    radii.forEach((r, i) => {
+      ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI * 2);
+      ctx.strokeStyle = `rgba(212,176,106,${i === 3 ? .16 : .09})`; ctx.lineWidth = i === 3 ? 1.1 : .8;
+      ctx.setLineDash(i % 2 ? [2, 7] : []); ctx.stroke();
+    });
+    ctx.setLineDash([]);
+    const rot = reduce.matches ? 0 : t * (Math.PI * 2 / 600);
+    const ro = R * 1.06;
+    ctx.beginPath(); ctx.arc(0, 0, ro, 0, Math.PI * 2); ctx.strokeStyle = 'rgba(212,176,106,.12)'; ctx.lineWidth = 1; ctx.stroke();
+    for (let k = 0; k < 120; k++) {
+      const a = rot + k * Math.PI / 60, big = k % 10 === 0, len = big ? 14 : k % 5 === 0 ? 8 : 4;
+      ctx.beginPath(); ctx.moveTo(Math.cos(a) * ro, Math.sin(a) * ro); ctx.lineTo(Math.cos(a) * (ro - len), Math.sin(a) * (ro - len));
+      ctx.strokeStyle = `rgba(212,176,106,${big ? .28 : .13})`; ctx.lineWidth = big ? 1.2 : .8; ctx.stroke();
+    }
+    ctx.globalCompositeOperation = 'lighter';
+    for (const p of parts) {
+      if (!reduce.matches) { p.life += step / p.span; p.a += step * p.w * (.05 + .05 / p.f); }
+      if (p.life >= 1) Object.assign(p, newPart(false));
+      const r = R * (p.f + .025 * Math.sin(t * .4 + p.ph));
+      const x = Math.cos(p.a) * r, y = Math.sin(p.a) * r;
+      const tail = .045 + .03 * p.w;
+      const al = Math.sin(Math.PI * p.life) * .32;
+      const g = ctx.createLinearGradient(Math.cos(p.a - tail) * r, Math.sin(p.a - tail) * r, x, y);
+      const col = p.gold ? '240,210,150' : '236,232,224';
+      g.addColorStop(0, `rgba(${col},0)`); g.addColorStop(1, `rgba(${col},${al})`);
+      ctx.beginPath(); ctx.arc(0, 0, r, p.a - tail, p.a); ctx.strokeStyle = g; ctx.lineWidth = 1.3; ctx.stroke();
+    }
+    ctx.font = `400 ${Math.max(12, U * .018)}px "Noto Serif TC", serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    SEVEN.forEach(([ch, per, lum, size], i) => {
+      const a = start[i] + (reduce.matches ? 0 : t * Math.PI * 2 / per), r = radii[i];
+      const x = Math.cos(a) * r, y = Math.sin(a) * r, s = size * Math.max(.8, U / 800);
+      const halo = ctx.createRadialGradient(x, y, 0, x, y, s * 7);
+      const col = ch === '日' ? '255,200,120' : ch === '月' ? '232,236,245' : '240,210,150';
+      halo.addColorStop(0, `rgba(${col},${.45 * lum})`); halo.addColorStop(1, `rgba(${col},0)`);
+      ctx.fillStyle = halo; ctx.beginPath(); ctx.arc(x, y, s * 7, 0, 7); ctx.fill();
+      ctx.fillStyle = `rgba(${col},${.95 * lum})`; ctx.beginPath(); ctx.arc(x, y, s, 0, 7); ctx.fill();
+      ctx.globalCompositeOperation = 'source-over';
+      ctx.fillStyle = `rgba(212,176,106,${.42 * lum})`;
+      ctx.fillText(ch, x + Math.cos(a) * s * 6, y + Math.sin(a) * s * 6);
+      ctx.globalCompositeOperation = 'lighter';
+    });
+    ctx.restore();
+    ctx.globalCompositeOperation = 'source-over';
+  }
+  window.redrawSky = () => { acc = 1000; frame(performance.now()); };
+  resize();
+  addEventListener('resize', resize);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) { lastT = 0; requestAnimationFrame(frame); } });
+  reduce.addEventListener?.('change', () => requestAnimationFrame(frame));
+  document.fonts?.ready.then(() => requestAnimationFrame(frame));
+  requestAnimationFrame(frame);
+  if (reduce.matches) addEventListener('scroll', () => requestAnimationFrame(frame), { passive: true });
+})();
+</script>
+
+<script>
+// 滑鼠特效：幽靈煙霧。來源 React Bits〈Ghost Cursor〉（https://reactbits.dev），
+// 著色程式原樣照抄，React 的部分改成一般網頁寫法；顏色換成網頁的金色。
+// 畫布 #ghost 放在星盤之上、三欄之下，不接收點擊。
+(() => {
+  const VERTEX = `#version 300 es
+  in vec2 aPosition;
+  out vec2 vUv;
+  void main() {
+    vUv = aPosition * 0.5 + 0.5;
+    gl_Position = vec4(aPosition, 0.0, 1.0);
+  }`;
+
+  const NOISE = `
+  vec2 hash2(vec2 p) {
+    vec3 p3 = fract(vec3(p.xyx) * vec3(0.1031, 0.103, 0.0973));
+    p3 += dot(p3, p3.yzx + 33.33);
+    return fract((p3.xx + p3.yz) * p3.zy) * 2.0 - 1.0;
+  }
+
+  vec3 gradientNoise(vec2 p) {
+    vec2 i = floor(p);
+    vec2 f = fract(p);
+    vec2 u = f * f * f * (f * (f * 6.0 - 15.0) + 10.0);
+    vec2 du = 30.0 * f * f * (f * (f - 2.0) + 1.0);
+    vec2 ga = hash2(i);
+    vec2 gb = hash2(i + vec2(1.0, 0.0));
+    vec2 gc = hash2(i + vec2(0.0, 1.0));
+    vec2 gd = hash2(i + vec2(1.0, 1.0));
+    float va = dot(ga, f);
+    float vb = dot(gb, f - vec2(1.0, 0.0));
+    float vc = dot(gc, f - vec2(0.0, 1.0));
+    float vd = dot(gd, f - vec2(1.0, 1.0));
+    float k = va - vb - vc + vd;
+    float value = va + u.x * (vb - va) + u.y * (vc - va) + u.x * u.y * k;
+    vec2 slope = ga + u.x * (gb - ga) + u.y * (gc - ga) + u.x * u.y * (ga - gb - gc + gd) + du * (u.yx * k + vec2(vb, vc) - va);
+    return vec3(value, slope);
+  }
+  `;
+
+  const SIM = `#version 300 es
+  precision highp float;
+  in vec2 vUv;
+  out vec4 fragColor;
+  uniform sampler2D uState;
+  uniform vec2 uSize;
+  uniform float uDt;
+  uniform float uTime;
+  uniform float uDecay;
+  uniform float uDrag;
+  uniform vec2 uDrift;
+  uniform float uTurbulence;
+  uniform float uSwirl;
+  uniform vec2 uFrom;
+  uniform vec2 uTo;
+  uniform float uRadius;
+  uniform float uTrail;
+  uniform float uIdle;
+  uniform vec2 uVelocity;
+  uniform vec4 uPuff;
+  ${NOISE}
+  float erf(float x) {
+    float x2 = x * x;
+    return sign(x) * sqrt(1.0 - exp(-x2 * (1.2732395 + 0.147 * x2) / (1.0 + 0.147 * x2)));
+  }
+  vec2 curl(vec2 p) {
+    vec3 a = gradientNoise(p * uSwirl + vec2(uTime * 0.11, -uTime * 0.07));
+    vec3 b = gradientNoise(p * uSwirl * 2.03 + vec2(-uTime * 0.13, uTime * 0.09) + 17.3);
+    vec2 g = a.yz + b.yz * 0.5;
+    return vec2(g.y, -g.x);
+  }
+  vec4 fetch(vec2 p) {
+    if (p.x < 0.0 || p.y < 0.0 || p.x > uSize.x || p.y > uSize.y) return vec4(0.0);
+    return texture(uState, p / uSize);
+  }
+  void main() {
+    vec2 p = gl_FragCoord.xy;
+    vec4 here = texture(uState, vUv);
+    vec2 flow = here.gb + curl(p) * uTurbulence + uDrift;
+    vec4 state = fetch(p - flow * uDt);
+    float density = state.r * uDecay;
+    vec2 velocity = state.gb * uDrag;
+
+    float sigma = max(uRadius, 0.5);
+    vec2 ab = uTo - uFrom;
+    float len = length(ab);
+    float trail = 0.0;
+    if (len > 0.25) {
+      vec2 dir = ab / len;
+      vec2 ap = p - uFrom;
+      float along = dot(ap, dir);
+      float across = dot(ap, vec2(-dir.y, dir.x));
+      float k = 1.4142136 * sigma;
+      trail = exp(-across * across / (2.0 * sigma * sigma)) * 0.5 * (erf(along / k) - erf((along - len) / k));
+    }
+    vec2 dh = p - uTo;
+    float head = exp(-dot(dh, dh) / (2.0 * sigma * sigma));
+    density += uTrail * trail + uIdle * uDt * head;
+    velocity += (uVelocity - velocity) * clamp(trail * 0.65, 0.0, 1.0);
+
+    if (uPuff.w > 0.0) {
+      vec2 d = p - uPuff.xy;
+      float r2 = dot(d, d);
+      float g = exp(-r2 / (2.0 * uPuff.z * uPuff.z));
+      density += uPuff.w * g;
+      velocity += (r2 > 0.0001 ? d / sqrt(r2) : vec2(0.0)) * g * uPuff.w * uPuff.z * 2.2;
+    }
+
+    fragColor = vec4(clamp(density, 0.0, 6.0), velocity, 1.0);
+  }`;
+
+  const SHADE = `#version 300 es
+  precision highp float;
+  in vec2 vUv;
+  out vec4 fragColor;
+  uniform sampler2D uState;
+  uniform vec2 uSimSize;
+  uniform vec2 uView;
+  uniform vec2 uHead;
+  uniform float uHeadSize;
+  uniform float uHeadAmount;
+  uniform float uTime;
+  uniform vec3 uColor;
+  uniform float uDetail;
+  uniform float uNoiseScale;
+  uniform vec2 uFlow;
+  uniform float uBrightness;
+  uniform float uTheme;
+
+  float hash(vec2 p) {
+    vec3 p3 = fract(vec3(p.xyx) * 0.1031);
+    p3 += dot(p3, p3.yzx + 33.33);
+    return fract((p3.x + p3.y) * p3.z);
+  }
+  float noise(vec2 p) {
+    vec2 i = floor(p);
+    vec2 f = fract(p);
+    f = f * f * (3.0 - 2.0 * f);
+    return mix(mix(hash(i), hash(i + vec2(1.0, 0.0)), f.x), mix(hash(i + vec2(0.0, 1.0)), hash(i + vec2(1.0, 1.0)), f.x), f.y);
+  }
+  float fbm(vec2 p) {
+    float v = 0.0;
+    float a = 0.5;
+    mat2 m = mat2(0.8776, 0.4794, -0.4794, 0.8776);
+    for (int i = 0; i < 4; i++) {
+      v += a * noise(p);
+      p = m * p * 2.0;
+      a *= 0.5;
+    }
+    return v;
+  }
+  float fbm5(vec2 p) {
+    float v = 0.0;
+    float a = 0.5;
+    mat2 m = mat2(0.8776, 0.4794, -0.4794, 0.8776);
+    for (int i = 0; i < 5; i++) {
+      v += a * noise(p);
+      p = m * p * 2.0;
+      a *= 0.52;
+    }
+    return v;
+  }
+  vec4 cubic(sampler2D tex, vec2 uv, vec2 size) {
+    vec2 st = uv * size - 0.5;
+    vec2 i = floor(st);
+    vec2 f = st - i;
+    vec2 f2 = f * f;
+    vec2 f3 = f2 * f;
+    vec2 w0 = (1.0 - 3.0 * f + 3.0 * f2 - f3) / 6.0;
+    vec2 w1 = (4.0 - 6.0 * f2 + 3.0 * f3) / 6.0;
+    vec2 w2 = (1.0 + 3.0 * f + 3.0 * f2 - 3.0 * f3) / 6.0;
+    vec2 w3 = f3 / 6.0;
+    vec2 g0 = w0 + w1;
+    vec2 g1 = w2 + w3;
+    vec2 c0 = (i + 0.5 + w1 / g0 - 1.0) / size;
+    vec2 c1 = (i + 0.5 + w3 / g1 + 1.0) / size;
+    vec4 a = texture(tex, c0) * g0.x + texture(tex, vec2(c1.x, c0.y)) * g1.x;
+    vec4 b = texture(tex, vec2(c0.x, c1.y)) * g0.x + texture(tex, c1) * g1.x;
+    return a * g0.y + b * g1.y;
+  }
+  float field(vec2 uv, vec2 p) {
+    vec2 d = p - uHead;
+    return cubic(uState, uv, uSimSize).r + uHeadAmount * exp(-dot(d, d) / (2.0 * uHeadSize * uHeadSize));
+  }
+  void main() {
+    vec2 p = vUv * uView;
+    float density = field(vUv, p);
+    if (density < 0.002) {
+      fragColor = vec4(0.0);
+      return;
+    }
+    vec2 step = vec2(1.5) / uSimSize;
+    float dx = field(vUv + vec2(step.x, 0.0), p + vec2(step.x * uView.x, 0.0)) - field(vUv - vec2(step.x, 0.0), p - vec2(step.x * uView.x, 0.0));
+    float dy = field(vUv + vec2(0.0, step.y), p + vec2(0.0, step.y * uView.y)) - field(vUv - vec2(0.0, step.y), p - vec2(0.0, step.y * uView.y));
+
+    vec2 n = (p + uFlow) * uNoiseScale;
+    float t = uTime;
+    vec2 q = vec2(fbm(n + t * 0.1), fbm(n + vec2(5.2, 1.3) + t * 0.1));
+    vec2 r = vec2(fbm(n + q * 1.8 + vec2(1.7, 9.2) + t * 0.15), fbm(n + q * 1.8 + vec2(8.3, 2.8) + t * 0.15));
+    float smoke = fbm5(n + r * 1.1);
+    float wisp = pow(smoothstep(0.18, 0.82, smoke), 2.0) * 2.8;
+    float body = density * mix(1.0, wisp, uDetail);
+    float cloud = body * smoothstep(0.0, 0.32, body) * 1.15;
+    if (cloud <= 0.0) {
+      fragColor = vec4(0.0);
+      return;
+    }
+
+    vec3 normal = normalize(vec3(-dx * 2.2, -dy * 2.2, 1.0) + vec3((q - 0.5) * 0.35 * uDetail, 0.0));
+    float light = 0.7 + 0.5 * max(dot(normal, normalize(vec3(-0.35, 0.55, 0.75))), 0.0);
+    float core = smoothstep(0.7, 2.2, cloud);
+
+    vec3 tint = mix(uColor * light, mix(uColor, vec3(1.0), 0.55) * light, core);
+    vec3 ink = mix(uColor, uColor * 0.78, core * 0.6) * (1.12 - 0.12 * light);
+    vec3 color = mix(tint * uBrightness, ink, uTheme) * cloud;
+    fragColor = vec4(color, cloud);
+  }`;
+
+  const DOWN = `#version 300 es
+  precision highp float;
+  in vec2 vUv;
+  out vec4 fragColor;
+  uniform sampler2D uSource;
+  uniform vec2 uTexel;
+  uniform float uThreshold;
+  void main() {
+    vec4 a = texture(uSource, vUv + uTexel * vec2(-0.5, -0.5));
+    vec4 b = texture(uSource, vUv + uTexel * vec2(0.5, -0.5));
+    vec4 c = texture(uSource, vUv + uTexel * vec2(-0.5, 0.5));
+    vec4 d = texture(uSource, vUv + uTexel * vec2(0.5, 0.5));
+    vec4 color = (a + b + c + d) * 0.25;
+    float peak = max(color.r, max(color.g, color.b));
+    float keep = peak > 0.0 ? max(peak - uThreshold, 0.0) / peak : 0.0;
+    fragColor = color * keep;
+  }`;
+
+  const BLUR = `#version 300 es
+  precision highp float;
+  in vec2 vUv;
+  out vec4 fragColor;
+  uniform sampler2D uSource;
+  uniform vec2 uDirection;
+  void main() {
+    vec4 color = texture(uSource, vUv) * 0.181862;
+    color += (texture(uSource, vUv + uDirection * 1.423135) + texture(uSource, vUv - uDirection * 1.423135)) * 0.284316;
+    color += (texture(uSource, vUv + uDirection * 3.326702) + texture(uSource, vUv - uDirection * 3.326702)) * 0.106598;
+    color += (texture(uSource, vUv + uDirection * 5.242989) + texture(uSource, vUv - uDirection * 5.242989)) * 0.018156;
+    fragColor = color;
+  }`;
+
+  const COMPOSITE = `#version 300 es
+  precision highp float;
+  in vec2 vUv;
+  out vec4 fragColor;
+  uniform sampler2D uShade;
+  uniform sampler2D uBloom0;
+  uniform sampler2D uBloom1;
+  uniform sampler2D uBloom2;
+  uniform vec2 uShadeSize;
+  uniform vec3 uWeights;
+  uniform float uBloom;
+  uniform float uPresence;
+  uniform float uGrain;
+  uniform float uEdge;
+  uniform float uTime;
+  uniform float uTheme;
+  uniform vec3 uColor;
+
+  float hash(vec2 p) {
+    vec3 p3 = fract(vec3(p.xyx) * 0.1031);
+    p3 += dot(p3, p3.yzx + 33.33);
+    return fract((p3.x + p3.y) * p3.z);
+  }
+  vec4 cubic(sampler2D tex, vec2 uv, vec2 size) {
+    vec2 st = uv * size - 0.5;
+    vec2 i = floor(st);
+    vec2 f = st - i;
+    vec2 f2 = f * f;
+    vec2 f3 = f2 * f;
+    vec2 w0 = (1.0 - 3.0 * f + 3.0 * f2 - f3) / 6.0;
+    vec2 w1 = (4.0 - 6.0 * f2 + 3.0 * f3) / 6.0;
+    vec2 w2 = (1.0 + 3.0 * f + 3.0 * f2 - 3.0 * f3) / 6.0;
+    vec2 w3 = f3 / 6.0;
+    vec2 g0 = w0 + w1;
+    vec2 g1 = w2 + w3;
+    vec2 c0 = (i + 0.5 + w1 / g0 - 1.0) / size;
+    vec2 c1 = (i + 0.5 + w3 / g1 + 1.0) / size;
+    vec4 a = texture(tex, c0) * g0.x + texture(tex, vec2(c1.x, c0.y)) * g1.x;
+    vec4 b = texture(tex, vec2(c0.x, c1.y)) * g0.x + texture(tex, c1) * g1.x;
+    return a * g0.y + b * g1.y;
+  }
+  void main() {
+    vec4 shade = cubic(uShade, vUv, uShadeSize);
+    vec4 bloom = texture(uBloom0, vUv) * uWeights.x + texture(uBloom1, vUv) * uWeights.y + texture(uBloom2, vUv) * uWeights.z;
+    vec2 edge = min(vUv, 1.0 - vUv);
+    float vignette = mix(1.0 - uEdge, 1.0, clamp(min(edge.x, edge.y) * 2.0, 0.0, 1.0));
+    float fade = uPresence * vignette;
+    float grain = hash(gl_FragCoord.xy + fract(uTime * 7.13) * 91.7) - 0.5;
+    if (uTheme > 0.5) {
+      float coverage = 1.0 - exp(-(shade.a + bloom.a * uBloom * 0.6) * 0.95);
+      coverage = clamp(coverage * fade * (1.0 + grain * uGrain * 2.0), 0.0, 1.0);
+      vec3 pigment = shade.a > 0.0001 ? clamp(shade.rgb / shade.a, 0.0, 1.0) : uColor;
+      fragColor = vec4(pow(pigment, vec3(1.0 / 2.2)) * coverage, coverage);
+      return;
+    }
+    vec3 color = (shade.rgb + bloom.rgb * uBloom) * fade;
+    color = pow(1.0 - exp(-color * 0.95), vec3(1.0 / 2.2));
+    color += color * grain * uGrain * 2.0;
+    color = clamp(color + (hash(gl_FragCoord.xy * 1.37) - 0.5) / 255.0, 0.0, 1.0);
+    fragColor = vec4(color, max(color.r, max(color.g, color.b)));
+  }`;
+
+  const INTRO_MS = 1900;
+
+  const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
+
+  const parseColor = value => {
+    const text = String(value || '').trim();
+    const hex = /^#?([0-9a-f]{3}|[0-9a-f]{6})$/i.exec(text);
+    if (hex) {
+      const full = hex[1].length === 3 ? hex[1].replace(/./g, digit => digit + digit) : hex[1];
+      return [0, 2, 4].map(index => parseInt(full.slice(index, index + 2), 16) / 255);
+    }
+    const rgb = /^rgba?\(\s*([\d.]+)[\s,]+([\d.]+)[\s,]+([\d.]+)/i.exec(text);
+    if (rgb) return [rgb[1], rgb[2], rgb[3]].map(channel => clamp(parseFloat(channel) / 255, 0, 1));
+    return [0.706, 0.592, 0.812];
+  };
+
+  const compile = (gl, type, source) => {
+    const shader = gl.createShader(type);
+    if (!shader) return null;
+    gl.shaderSource(shader, source);
+    gl.compileShader(shader);
+    if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+      console.error(gl.getShaderInfoLog(shader));
+      gl.deleteShader(shader);
+      return null;
+    }
+    return shader;
+  };
+
+  const link = (gl, fragmentSource) => {
+    const vertex = compile(gl, gl.VERTEX_SHADER, VERTEX);
+    const fragment = compile(gl, gl.FRAGMENT_SHADER, fragmentSource);
+    const program = vertex && fragment ? gl.createProgram() : null;
+    if (!vertex || !fragment || !program) {
+      if (vertex) gl.deleteShader(vertex);
+      if (fragment) gl.deleteShader(fragment);
+      return null;
+    }
+    gl.attachShader(program, vertex);
+    gl.attachShader(program, fragment);
+    gl.bindAttribLocation(program, 0, 'aPosition');
+    gl.linkProgram(program);
+    gl.deleteShader(vertex);
+    gl.deleteShader(fragment);
+    if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+      console.error(gl.getProgramInfoLog(program));
+      gl.deleteProgram(program);
+      return null;
+    }
+    const uniforms = {};
+    const count = gl.getProgramParameter(program, gl.ACTIVE_UNIFORMS);
+    for (let index = 0; index < count; index++) {
+      const info = gl.getActiveUniform(program, index);
+      if (info) uniforms[info.name] = gl.getUniformLocation(program, info.name);
+    }
+    return { program, uniforms };
+  };
+
+  // ---- 以下把 React 版的執行部分改成一般網頁寫法（算法與參數照原版，只有顏色換成網頁的金色） ----
+  const canvas = document.getElementById('ghost');
+  if (!canvas) return;
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) { canvas.remove(); return; } // 系統設「減少動態」就不開
+  const touch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+  const s = {
+    color: parseColor('#d4b06a').map(channel => Math.pow(channel, 2.2)), // 金色＝網頁的 --gold
+    brightness: touch ? 0.4 : 0.55, size: touch ? 56 : 80, trail: 50, inertia: 0.5, turbulence: 0.5, drift: 0.3, detail: 1, // 亮度壓低：煙在人體圖後面，不能蓋過點的名字；手機人體圖小，煙團也縮小
+    grain: 0.05, bloom: 0.4, bloomRadius: 1, threshold: 0.025, edge: 0, clickPuff: true, theme: 0,
+    fadeDelay: touch ? 500 : 1000, fadeDuration: touch ? 1000 : 1500,
+    maxRatio: 2, budget: touch ? 3e5 : 6e5,
+  };
+
+  const gl = canvas.getContext('webgl2', {
+    alpha: true, premultipliedAlpha: true, antialias: false, depth: false, stencil: false, powerPreference: 'default'
+  });
+  if (!gl) { canvas.remove(); return; }
+
+  const createTarget = () => {
+    const texture = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, texture);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    return { texture, framebuffer: gl.createFramebuffer(), width: 0, height: 0 };
+  };
+  const allocate = (target, width, height) => {
+    if (target.width === width && target.height === height) return;
+    target.width = width;
+    target.height = height;
+    gl.bindTexture(gl.TEXTURE_2D, target.texture);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA16F, width, height, 0, gl.RGBA, gl.HALF_FLOAT, null);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, target.framebuffer);
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, target.texture, 0);
+    gl.clearColor(0, 0, 0, 0);
+    gl.clear(gl.COLOR_BUFFER_BIT);
+  };
+
+  let programs, sims, shade, downs, blurs;
+  const build = () => { // 開機；顯示卡重置後也用這個重建
+    if (!gl.getExtension('EXT_color_buffer_float')) return false;
+    const linked = [SIM, SHADE, DOWN, BLUR, COMPOSITE].map(source => link(gl, source));
+    if (linked.some(item => !item)) return false;
+    const [sim, shadeProgram, down, blur, composite] = linked;
+    programs = { sim, shade: shadeProgram, down, blur, composite };
+    gl.bindVertexArray(gl.createVertexArray());
+    gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
+    gl.enableVertexAttribArray(0);
+    gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
+    gl.disable(gl.BLEND);
+    gl.disable(gl.DEPTH_TEST);
+    sims = [createTarget(), createTarget()];
+    shade = createTarget();
+    downs = [createTarget(), createTarget(), createTarget()];
+    blurs = [createTarget(), createTarget(), createTarget()];
+    return true;
+  };
+  if (!build()) { canvas.remove(); return; }
+
+  const pass = (target, program) => {
+    gl.bindFramebuffer(gl.FRAMEBUFFER, target ? target.framebuffer : null);
+    gl.viewport(0, 0, target ? target.width : canvas.width, target ? target.height : canvas.height);
+    gl.useProgram(program.program);
+    return program.uniforms;
+  };
+  const bind = (unit, texture) => {
+    gl.activeTexture(gl.TEXTURE0 + unit);
+    gl.bindTexture(gl.TEXTURE_2D, texture);
+  };
+
+  const view = { width: 1, height: 1, ratio: 1, sim: 0.25, shade: 1 };
+  const ghost = { x: 0, y: 0, vx: 0, vy: 0, px: 0, py: 0, ready: false };
+  const pointer = { x: 0, y: 0, inside: false, moved: -1e9 };
+  const flow = { y: 0 };
+  const puffs = [];
+  let presence = 0, current = 0, raf = 0, last = 0, clock = 0;
+  let pageVisible = document.visibilityState !== 'hidden';
+  let lost = false, dirty = true;
+  let introLive = true, introStart = -1; // 開頁時煙霧自己飄過一次
+
+  const resize = () => {
+    const rect = canvas.getBoundingClientRect();
+    const width = Math.max(1, Math.round(rect.width));
+    const height = Math.max(1, Math.round(rect.height));
+    const ratio = Math.min(window.devicePixelRatio || 1, s.maxRatio);
+    view.width = width;
+    view.height = height;
+    view.ratio = ratio;
+    const cw = Math.max(1, Math.round(width * ratio));
+    const ch = Math.max(1, Math.round(height * ratio));
+    if (canvas.width !== cw || canvas.height !== ch) {
+      canvas.width = cw;
+      canvas.height = ch;
+    }
+    view.shade = Math.min(1, Math.sqrt(s.budget / (width * height)));
+    const sw = Math.max(8, Math.round(width * view.shade));
+    const sh = Math.max(8, Math.round(height * view.shade));
+    allocate(shade, sw, sh);
+    let w = Math.max(4, Math.round(sw / 2));
+    let h = Math.max(4, Math.round(sh / 2));
+    for (let i = 0; i < 3; i++) {
+      allocate(downs[i], w, h);
+      allocate(blurs[i], w, h);
+      w = Math.max(2, Math.round(w / 2));
+      h = Math.max(2, Math.round(h / 2));
+    }
+    view.sim = Math.min(0.35, 220 / Math.max(width, height));
+    const simW = Math.max(16, Math.round(width * view.sim));
+    const simH = Math.max(16, Math.round(height * view.sim));
+    allocate(sims[0], simW, simH);
+    allocate(sims[1], simW, simH);
+  };
+
+  const simulate = (dt, active) => {
+    const src = sims[current];
+    const dst = sims[1 - current];
+    const scale = view.sim;
+    const sigma = s.size * scale * 0.3;
+    const decay = Math.exp(-dt / (0.12 + s.trail * 0.022));
+    const u = pass(dst, programs.sim);
+    bind(0, src.texture);
+    gl.uniform1i(u.uState, 0);
+    gl.uniform2f(u.uSize, dst.width, dst.height);
+    gl.uniform1f(u.uDt, dt);
+    gl.uniform1f(u.uTime, clock);
+    gl.uniform1f(u.uDecay, decay);
+    gl.uniform1f(u.uDrag, Math.exp(-dt * 2.4));
+    gl.uniform2f(u.uDrift, 0, s.drift * 110 * scale);
+    gl.uniform1f(u.uTurbulence, s.turbulence * 70 * scale);
+    gl.uniform1f(u.uSwirl, 1 / Math.max(1, s.size * scale * 2.2));
+    gl.uniform2f(u.uFrom, ghost.px * scale, (view.height - ghost.py) * scale);
+    gl.uniform2f(u.uTo, ghost.x * scale, (view.height - ghost.y) * scale);
+    gl.uniform1f(u.uRadius, sigma);
+    gl.uniform1f(u.uTrail, active ? 0.42 * presence : 0);
+    gl.uniform1f(u.uIdle, active ? 0.22 * presence : 0);
+    gl.uniform2f(u.uVelocity, ghost.vx * scale * 0.5, -ghost.vy * scale * 0.5);
+    const puff = puffs.shift();
+    if (puff) gl.uniform4f(u.uPuff, puff.x * scale, (view.height - puff.y) * scale, sigma * 1.4, 0.9);
+    else gl.uniform4f(u.uPuff, 0, 0, 1, 0);
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
+    current = 1 - current;
+  };
+
+  const render = () => {
+    let u = pass(shade, programs.shade);
+    bind(0, sims[current].texture);
+    gl.uniform1i(u.uState, 0);
+    gl.uniform2f(u.uSimSize, sims[current].width, sims[current].height);
+    gl.uniform2f(u.uView, view.width, view.height);
+    gl.uniform2f(u.uHead, ghost.x, view.height - ghost.y);
+    gl.uniform1f(u.uHeadSize, s.size * 0.38);
+    gl.uniform1f(u.uHeadAmount, ghost.ready ? 0.8 * presence : 0);
+    gl.uniform1f(u.uTime, clock);
+    gl.uniform3fv(u.uColor, s.color);
+    gl.uniform1f(u.uDetail, s.detail);
+    gl.uniform1f(u.uNoiseScale, 2.4 / Math.max(20, s.size * 2.6));
+    gl.uniform2f(u.uFlow, 0, flow.y);
+    gl.uniform1f(u.uBrightness, s.brightness);
+    gl.uniform1f(u.uTheme, s.theme);
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
+
+    let source = shade;
+    for (let i = 0; i < 3; i++) {
+      u = pass(downs[i], programs.down);
+      bind(0, source.texture);
+      gl.uniform1i(u.uSource, 0);
+      gl.uniform2f(u.uTexel, 1 / source.width, 1 / source.height);
+      gl.uniform1f(u.uThreshold, i === 0 ? s.threshold : 0);
+      gl.drawArrays(gl.TRIANGLES, 0, 3);
+      u = pass(blurs[i], programs.blur);
+      bind(0, downs[i].texture);
+      gl.uniform1i(u.uSource, 0);
+      gl.uniform2f(u.uDirection, 1 / downs[i].width, 0);
+      gl.drawArrays(gl.TRIANGLES, 0, 3);
+      u = pass(downs[i], programs.blur);
+      bind(0, blurs[i].texture);
+      gl.uniform1i(u.uSource, 0);
+      gl.uniform2f(u.uDirection, 0, 1 / blurs[i].height);
+      gl.drawArrays(gl.TRIANGLES, 0, 3);
+      source = downs[i];
+    }
+
+    u = pass(null, programs.composite);
+    bind(0, shade.texture);
+    bind(1, downs[0].texture);
+    bind(2, downs[1].texture);
+    bind(3, downs[2].texture);
+    gl.uniform1i(u.uShade, 0);
+    gl.uniform1i(u.uBloom0, 1);
+    gl.uniform1i(u.uBloom1, 2);
+    gl.uniform1i(u.uBloom2, 3);
+    gl.uniform2f(u.uShadeSize, shade.width, shade.height);
+    const spread = s.bloomRadius;
+    gl.uniform3f(u.uWeights, 1, 0.6 + 0.4 * spread, 0.25 + 0.75 * Math.min(1, spread * spread * 0.5));
+    gl.uniform1f(u.uBloom, s.bloom);
+    gl.uniform1f(u.uPresence, presence);
+    gl.uniform1f(u.uGrain, s.grain);
+    gl.uniform1f(u.uEdge, s.edge);
+    gl.uniform1f(u.uTime, clock);
+    gl.uniform1f(u.uTheme, s.theme);
+    gl.uniform3fv(u.uColor, s.color);
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
+  };
+
+  const frame = now => {
+    raf = 0;
+    if (lost) return;
+    const dt = clamp((now - last) / 1000 || 0, 0, 0.05);
+    last = Math.max(last, now);
+    clock += dt;
+    if (dirty) resize();
+    dirty = false;
+
+    if (introLive) {
+      if (introStart < 0) introStart = now + 280;
+      const t = (now - introStart) / INTRO_MS;
+      if (t >= 0) {
+        const e = t < 1 ? t * t * (3 - 2 * t) : 1;
+        const x = view.width * (0.16 + 0.44 * e + 0.05 * Math.sin(e * Math.PI));
+        const y = view.height * (0.7 - 0.24 * e - 0.1 * Math.sin(e * Math.PI * 2));
+        if (!ghost.ready) {
+          ghost.x = ghost.px = x;
+          ghost.y = ghost.py = y;
+          ghost.vx = ghost.vy = 0;
+          ghost.ready = true;
+        }
+        pointer.x = x;
+        pointer.y = y;
+        pointer.inside = true;
+        pointer.moved = now;
+        if (t >= 1) introLive = false;
+      }
+    }
+
+    const idle = now - pointer.moved;
+    const target = !ghost.ready ? 0 : idle < s.fadeDelay ? 1 : Math.max(0, 1 - (idle - s.fadeDelay) / s.fadeDuration);
+    presence += (target - presence) * (1 - Math.exp(-dt / (target > presence ? 0.12 : 0.08)));
+    if (Math.abs(target - presence) < 0.002) presence = target;
+
+    ghost.px = ghost.x;
+    ghost.py = ghost.y;
+    if (ghost.ready) {
+      if (pointer.inside) {
+        const stiffness = 520 * Math.pow(1 - s.inertia, 2) + 26;
+        const damping = 2 * Math.sqrt(stiffness) * 0.92;
+        const steps = Math.max(1, Math.ceil(dt / (1 / 240)));
+        const h = dt / steps;
+        for (let i = 0; i < steps; i++) {
+          ghost.vx += (stiffness * (pointer.x - ghost.x) - damping * ghost.vx) * h;
+          ghost.vy += (stiffness * (pointer.y - ghost.y) - damping * ghost.vy) * h;
+          ghost.x += ghost.vx * h;
+          ghost.y += ghost.vy * h;
+        }
+      } else {
+        const glide = Math.pow(s.inertia, dt * 60);
+        ghost.vx *= glide;
+        ghost.vy *= glide;
+        ghost.x += ghost.vx * dt;
+        ghost.y += ghost.vy * dt;
+      }
+    }
+    flow.y -= s.drift * 110 * dt;
+
+    simulate(dt, presence > 0.01);
+    render();
+
+    const busy = introLive || target > 0 || presence > 0.001 || puffs.length > 0;
+    if (!busy) { // 煙散完就清空、停下來，不佔效能
+      for (const item of sims) {
+        gl.bindFramebuffer(gl.FRAMEBUFFER, item.framebuffer);
+        gl.clearColor(0, 0, 0, 0);
+        gl.clear(gl.COLOR_BUFFER_BIT);
+      }
+      gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+      gl.viewport(0, 0, canvas.width, canvas.height);
+      gl.clearColor(0, 0, 0, 0);
+      gl.clear(gl.COLOR_BUFFER_BIT);
+      return;
+    }
+    if (pageVisible) raf = requestAnimationFrame(frame);
+  };
+
+  const wake = () => {
+    if (raf || lost || !pageVisible) return;
+    last = performance.now();
+    raf = requestAnimationFrame(frame);
+  };
+
+  const locate = event => {
+    const rect = canvas.getBoundingClientRect();
+    const x = event.clientX - rect.left;
+    const y = event.clientY - rect.top;
+    return { x, y, inside: x >= 0 && y >= 0 && x <= rect.width && y <= rect.height };
+  };
+  const onLeave = () => {
+    const now = performance.now();
+    if (pointer.inside && now - pointer.moved < s.fadeDelay) pointer.moved = now;
+    pointer.inside = false;
+    wake();
+  };
+  const onPointerMove = event => {
+    const spot = locate(event);
+    if (spot.inside) introLive = false;
+    if (!spot.inside) {
+      if (pointer.inside) onLeave();
+      return;
+    }
+    if (!pointer.inside && (!ghost.ready || presence < 0.05)) {
+      ghost.x = ghost.px = spot.x;
+      ghost.y = ghost.py = spot.y;
+      ghost.vx = ghost.vy = 0;
+      ghost.ready = true;
+    }
+    pointer.x = spot.x;
+    pointer.y = spot.y;
+    pointer.inside = true;
+    pointer.moved = performance.now();
+    wake();
+  };
+  const onPointerDown = event => {
+    const spot = locate(event);
+    if (!spot.inside) return;
+    onPointerMove(event);
+    if (s.clickPuff) { // 點一下噴一小團煙
+      puffs.push({ x: spot.x, y: spot.y });
+      wake();
+    }
+  };
+
+  window.addEventListener('pointermove', onPointerMove, { passive: true });
+  window.addEventListener('pointerdown', onPointerDown, { passive: true });
+  document.documentElement.addEventListener('pointerleave', onLeave);
+  canvas.addEventListener('webglcontextlost', event => {
+    event.preventDefault();
+    lost = true;
+    cancelAnimationFrame(raf);
+    raf = 0;
+  });
+  canvas.addEventListener('webglcontextrestored', () => {
+    if (!build()) return;
+    lost = false;
+    current = 0;
+    dirty = true;
+    wake();
+  });
+  new ResizeObserver(() => { dirty = true; wake(); }).observe(canvas);
+  document.addEventListener('visibilitychange', () => {
+    pageVisible = document.visibilityState !== 'hidden';
+    wake();
+  });
+
+  resize();
+  wake();
+})();
+
+</script>
