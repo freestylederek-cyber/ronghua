@@ -205,7 +205,8 @@ h1 { margin: 4px 0 0; font: 600 34px/1.15 var(--f-disp); letter-spacing: .12em; 
   .fig .pt .lbl { font-size: 38px; stroke-width: 10px; }
   .fig .pt.extra .lbl { font-size: 32px; }
   .fig .pt .alias { font-size: 24px; }
-  .fig .pt .dot, .fig .pt .halo, .fig .pt .num { scale: 1.22; }
+  .fig .pt .dot, .fig .pt .halo { scale: 1.22; }
+  .fig .pt .num { font-size: 27px; } /* 站號直接放大字：Safari 對文字用放大效果時中心點不對，數字會偏到圓圈外 */
   .card .name { font-size: 27px; }
 }
 @media (max-width: 360px) { .seg button { padding: 0 6px; } }
@@ -430,16 +431,16 @@ const svg = document.getElementById('fig');
 const fig = drawFigure(svg, 'main', 6, ['吸氣']); // 只畫書上起手的吸氣線；風、水、火、回程的線不畫
 fig.head.remove();
 const routesG = svg.querySelector('.routes');
-fig.live['吸氣'] = el('path', { d: ROUTES['吸氣'].d, class: 'breath-live', 'stroke-dasharray': ROUTES['吸氣'].total, 'stroke-dashoffset': ROUTES['吸氣'].total }, routesG);
+fig.live['吸氣'] = el('path', { class: 'breath-live' }, routesG);
 const upto = (items, id) => items.slice(0, items.indexOf(id) + 1);
 const BACK3 = '胎元後三寸';                                  // 胎元正後方、會陰正上方（跟會陰成 90 度）
 // 溶化（老師口述的真正路徑）：陰蹻沿風路背後上到玉枕 → 泥丸（頭頂）→ 透明綜閤（眉心）→ 人中 → 舌根 → 重樓 → 降宮 → 陽維穴 → 心竅 → 祖海 → 胎元 → 胎元後三寸 → 腎竅沿水路往上到大腦
 const MELT_ITEMS = [...upto(D.paths['風'], 8), ...RONG.front, BACK3, ...D.paths['水'].slice(D.paths['水'].indexOf(9))];
 ROUTES['溶化'] = buildRoute(MELT_ITEMS);
-fig.live['溶化'] = el('path', { d: ROUTES['溶化'].d, class: 'live r-melt', filter: 'url(#glow-main)', 'stroke-dasharray': ROUTES['溶化'].total, 'stroke-dashoffset': ROUTES['溶化'].total }, routesG);
+fig.live['溶化'] = el('path', { class: 'live r-melt', filter: 'url(#glow-wide)' }, routesG);
 routesG.prepend(el('path', { d: ROUTES['溶化'].d, class: 'ghost r-melt-g' }));
 
-// 完全垂直或水平的線，發光範圍不能跟著線寬算（寬度是零會整段不畫），改用固定範圍
+// 發光範圍用固定範圍：線只畫走過的那段，範圍會一直變；完全垂直或水平的線寬度是零，跟著線算會整段不畫
 (() => {
   const f = el('filter', { id: 'glow-wide', filterUnits: 'userSpaceOnUse', x: -100, y: -100, width: 1360, height: 1988 }, svg.querySelector('defs'));
   el('feGaussianBlur', { in: 'SourceGraphic', stdDeviation: 6, result: 'b' }, f);
@@ -449,7 +450,17 @@ routesG.prepend(el('path', { d: ROUTES['溶化'].d, class: 'ghost r-melt-g' }));
 // ---------- 老師秘傳起手：會陰、胎元一起吸，吸滿在胎元後三寸，再下到會陰（金線） ----------
 ROUTES['集會陰'] = buildRoute([1, BACK3]); ROUTES['集胎元'] = buildRoute([19, BACK3]);
 ROUTES['起溶'] = buildRoute([BACK3, 1]);
-['集會陰', '集胎元', '起溶'].forEach(k => fig.live[k] = el('path', { d: ROUTES[k].d, class: 'live r-melt', filter: 'url(#glow-wide)', 'stroke-dasharray': ROUTES[k].total, 'stroke-dashoffset': ROUTES[k].total }, routesG));
+['集會陰', '集胎元', '起溶'].forEach(k => fig.live[k] = el('path', { class: 'live r-melt', filter: 'url(#glow-wide)' }, routesG));
+// 線畫到第 s 長度：只畫走過的那一段。不用虛線位移，因為手機 Safari 畫很長的虛線（溶化 600 多小段）會一段一段同時冒出來
+function drawTo(k, s) {
+  const R = ROUTES[k], p = fig.live[k];
+  if (s <= 0) { p.setAttribute('d', ''); return; }
+  R.xy = R.xy || R.pts.map(q => q[0].toFixed(1) + ' ' + q[1].toFixed(1));
+  let i = 1; while (i < R.pts.length && R.L[i] <= s) i++;
+  const out = R.xy.slice(0, i);
+  if (i < R.pts.length) { const [x, y] = pointAt(R, s); out.push(x.toFixed(1) + ' ' + y.toFixed(1)); }
+  p.setAttribute('d', 'M' + out.join(' L'));
+}
 
 // 補充的點畫在圖上（金色小點、不編號）
 const ptsG = svg.querySelector('.points');
@@ -623,12 +634,12 @@ function apply(ph, u) {
     drawGather(u);
     if (u >= .5 && !ph.lit) { ph.lit = true; light(19, '集氣'); light(1, '集氣'); pingPoint(19); pingPoint(1); }
     const e = easeInOut(Math.max(0, Math.min(1, (u - .4) / .6)));
-    ['集會陰', '集胎元'].forEach(k => fig.live[k].setAttribute('stroke-dashoffset', (ROUTES[k].total * (1 - e)).toFixed(1)));
+    ['集會陰', '集胎元'].forEach(k => drawTo(k, ROUTES[k].total * e));
     if (u >= .97 && !ph.full) { ph.full = true; light(BACK3, '集氣'); pingPoint(BACK3); }
   }
   if (ph.tracks) for (const t of ph.tracks) {
     const R = ROUTES[t.r], s = t.s0 + (t.s1 - t.s0) * t.ease(u);
-    fig.live[t.r].setAttribute('stroke-dashoffset', Math.max(0, R.total - s));
+    drawTo(t.r, s);
     const [x, y] = pointAt(R, s); heads[t.r].setAttribute('transform', `translate(${x.toFixed(1)} ${y.toFixed(1)})`);
     for (const st of R.stops) if (st.s > t.prev && st.s <= s + 0.01) onStop(t.r, st);
     t.prev = s + 0.01;
@@ -675,7 +686,7 @@ function endAll() {
 }
 
 function clearVisuals() {
-  Object.entries(fig.live).forEach(([k, p]) => p.setAttribute('stroke-dashoffset', ROUTES[k].total));
+  Object.keys(fig.live).forEach(k => drawTo(k, 0));
   Object.values(heads).forEach(h => h.style.opacity = 0);
   Object.values(fig.nodes).forEach(g => { g.classList.remove('lit', 'current', 'ping', 'off'); delete g.dataset.route; });
   const on = new Set([...idsOf('溶化'), ...(start === 'teacher' ? [19, 1, BACK3] : idsOf('吸氣'))]);
@@ -776,6 +787,7 @@ reset();
     if (acc < 33 && !reduce.matches) return; // 約每秒 30 張就夠
     const step = acc / 1000; acc = 0;
     const t = now / 1000;
+    if (!W || !H) return; // 畫面寬或高是 0（例如分頁藏起來）就先不畫
     const [cx, cy, U] = center();
     ctx.clearRect(0, 0, W, H);
     ctx.globalAlpha = 1; ctx.drawImage(dust, 0, 0, W, H);
